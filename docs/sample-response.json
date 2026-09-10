@@ -130,7 +130,7 @@
   "processing_metadata": {
     "processing_time_seconds": 1.25,
     "timestamp": "2025-01-15T14:30:01.250Z",
-    "extractor_used": "gemini-2.5-flash",
+    "extractor_used": "qwen/qwen3.8-27b",
     "pages_processed": 1,
     "environment": "development"
   },

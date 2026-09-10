@@ -24,7 +24,7 @@ STRICT EXTRACTION RULES:
    - Interpret parentheses like `(5,000)` as negative numbers `-5000`.
 6. For multi-period financial statements (e.g., 2023 vs 2024):
    - Group fields under their respective period label in the `periods` array.
-7. Include line items, financial tables, notes, and raw text evidence wherever present.
+7. For invoices, extract every line item table row into the `line_items` array (description, quantity, unit_price, total). Include financial tables, notes, and raw text evidence wherever present.
 8. Do NOT attempt to perform arithmetic or determine whether math is correct. Just extract reported values.
 
 Document Type: {document_type}
@@ -132,15 +132,34 @@ def extract_with_groq(
     # Build multimodal content parts
     content_parts = []
     
-    # Add page images as base64 data URLs for multimodal extraction
-    for img_bytes in page_images:
-        b64_str = base64.b64encode(img_bytes).decode("utf-8")
-        content_parts.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/png;base64,{b64_str}"
-            }
-        })
+    # Add page images as compressed base64 data URLs for multimodal vision extraction
+    if is_scanned or not any(p.text.strip() for p in raw_text_pages):
+        for img_bytes in page_images:
+            try:
+                from PIL import Image
+                import io
+                img = Image.open(io.BytesIO(img_bytes))
+                img.thumbnail((1024, 1024))
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=85)
+                b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+                content_parts.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{b64_str}"
+                    }
+                })
+            except Exception as img_err:
+                logger.warning(f"Image thumbnail compression failed: {img_err}, using raw bytes")
+                b64_str = base64.b64encode(img_bytes).decode("utf-8")
+                content_parts.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{b64_str}"
+                    }
+                })
 
     content_parts.append({
         "type": "text",
@@ -166,7 +185,8 @@ def extract_with_groq(
                 model=model_name,
                 messages=messages,
                 response_format={"type": "json_object"},
-                temperature=0.1
+                temperature=0.1,
+                max_tokens=950
             )
             
             raw_response_text = response.choices[0].message.content

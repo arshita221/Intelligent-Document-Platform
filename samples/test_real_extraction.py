@@ -20,7 +20,7 @@ def run_real_extractions():
     ]
     
     print("==================================================")
-    print("REAL GEMINI 3.6 FLASH E2E DOCUMENT EXTRACTION TEST")
+    print("REAL GROQ QWEN 3.8 27B E2E DOCUMENT EXTRACTION TEST")
     print("==================================================")
     
     for doc_type, file_path in documents:
@@ -38,7 +38,7 @@ def run_real_extractions():
         print(f"Math Checks:      {len(resp.validation.checks)} (Passed: {resp.validation.passed_count}, Failed: {resp.validation.failed_count})")
         print(f"Math Status:      {resp.validation.overall_status}")
         
-        # Pacing delay between Gemini API calls to prevent 429 quota spikes
+        # Pacing delay between Groq API calls
         time.sleep(3)
 
 if __name__ == "__main__":

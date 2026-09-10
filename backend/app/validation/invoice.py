@@ -49,8 +49,11 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
 
     # Check B: Sum of line totals = subtotal / total
     line_totals = [item.total or item.amount for item in extraction.line_items if (item.total or item.amount) is not None]
-    subtotal = field_map.get("subtotal")
-    total_amount = field_map.get("total")
+    subtotal = field_map.get("subtotal") or field_map.get("sub_total")
+    total_amount = field_map.get("total") or field_map.get("total_amount") or field_map.get("total amount")
+    tax = field_map.get("tax") or field_map.get("tax_amount") or field_map.get("tax (10% gst)")
+    amount_paid = field_map.get("amount_paid") or field_map.get("amount paid")
+    amount_due = field_map.get("amount_due") or field_map.get("amount due")
     
     check_name_b = "Sum of Line Items ≈ Subtotal"
     formula_b = "sum(line_totals) ≈ subtotal"
@@ -81,7 +84,6 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
         ))
 
     # Check C: Subtotal + Tax = Total
-    tax = field_map.get("tax")
     check_name_c = "Subtotal + Tax ≈ Total"
     formula_c = "subtotal + tax ≈ total"
     operands_c = {"subtotal": subtotal, "tax": tax, "total": total_amount}
@@ -111,8 +113,6 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
         ))
 
     # Check D: Total - Amount Paid = Amount Due
-    amount_paid = field_map.get("amount_paid")
-    amount_due = field_map.get("amount_due")
     check_name_d = "Total - Amount Paid ≈ Amount Due"
     formula_d = "total - amount_paid ≈ amount_due"
     operands_d = {"total": total_amount, "amount_paid": amount_paid, "amount_due": amount_due}

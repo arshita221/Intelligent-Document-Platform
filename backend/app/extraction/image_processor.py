@@ -4,7 +4,7 @@ from typing import Tuple, Dict, Any
 
 def process_image_document(file_path: str) -> Tuple[bytes, str, Dict[str, Any]]:
     """
-    Validates and converts image file for multimodal Gemini processing.
+    Validates and converts image file for multimodal Groq processing.
     Returns:
     - image_bytes: PNG/JPEG image binary data
     - mime_type: image/png or image/jpeg
