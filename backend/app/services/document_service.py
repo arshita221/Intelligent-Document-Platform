@@ -7,7 +7,7 @@ from app.utils.file_validation import validate_uploaded_file
 from app.utils.helpers import generate_document_name
 from app.extraction.pdf_processor import process_pdf_document
 from app.extraction.image_processor import process_image_document
-from app.services.gemini_service import extract_with_gemini
+from app.services.groq_service import extract_with_groq
 from app.validation.engine import run_financial_validation
 from app.services import persistence_service
 from app.schemas.documents import DocumentResponse, FileValidationResult, ProcessingMetadata
@@ -125,9 +125,9 @@ def process_document_pipeline(
         is_scanned = True
 
     # 3 & 4. Layer: AI Structured Extraction
-    extractor_name = "gemini-2.5-flash"
+    extractor_name = settings.GROQ_MODEL
     try:
-        extraction_data = extract_with_gemini(
+        extraction_data = extract_with_groq(
             document_type=doc_type_clean,
             raw_text_pages=raw_text_pages,
             page_images=page_images,

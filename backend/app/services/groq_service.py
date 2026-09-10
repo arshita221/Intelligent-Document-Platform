@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+import base64
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
 from app.core.logging_config import logger
@@ -89,26 +90,26 @@ Return your output as a SINGLE JSON object matching this exact JSON schema:
 }}
 """
 
-def extract_with_gemini(
+def extract_with_groq(
     document_type: str,
     raw_text_pages: List[RawTextPage],
     page_images: List[bytes],
     is_scanned: bool = False
 ) -> DocumentExtraction:
     """
-    Extracts financial structured data using Google Gemini API.
+    Extracts financial structured data using Groq SDK and qwen/qwen3.8-27b model.
     """
-    model_name = settings.GEMINI_MODEL or "gemini-3.6-flash"
+    model_name = settings.GROQ_MODEL or "qwen/qwen3.8-27b"
 
     # Safe diagnostic logging - NEVER log actual key value
-    logger.info(f"GEMINI_API_KEY configured: {settings.is_gemini_api_key_configured}")
-    logger.info(f"Using Gemini Model: {model_name}")
+    logger.info(f"GROQ_API_KEY configured: {settings.is_groq_api_key_configured}")
+    logger.info(f"Using Groq Model: {model_name}")
 
-    api_key = settings.GEMINI_API_KEY
-    if not api_key or not settings.is_gemini_api_key_configured:
+    api_key = settings.GROQ_API_KEY
+    if not api_key or not settings.is_groq_api_key_configured:
         err_msg = (
-            "GEMINI_API_KEY is not configured or contains a placeholder. "
-            "Please set a valid Google Gemini API key in backend/.env or .env file."
+            "GROQ_API_KEY is not configured or contains a placeholder. "
+            "Please set a valid Groq API key in backend/.env or .env file."
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
@@ -123,45 +124,53 @@ def extract_with_gemini(
     if text_content_snippet.strip():
         prompt_text += f"\n\nNATIVE TEXT IN DOCUMENT:\n{text_content_snippet}"
 
-    # Import google-genai SDK
-    from google import genai
-    from google.genai import types
+    # Import Groq SDK
+    from groq import Groq
     
-    client = genai.Client(api_key=api_key)
+    client = Groq(api_key=api_key)
     
-    # Build contents array with images and prompt text
-    contents = []
+    # Build multimodal content parts
+    content_parts = []
     
-    # Add page images for multimodal extraction
-    for idx, img_bytes in enumerate(page_images):
-        part = types.Part.from_bytes(
-            data=img_bytes,
-            mime_type="image/png"
-        )
-        contents.append(part)
+    # Add page images as base64 data URLs for multimodal extraction
+    for img_bytes in page_images:
+        b64_str = base64.b64encode(img_bytes).decode("utf-8")
+        content_parts.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/png;base64,{b64_str}"
+            }
+        })
 
-    contents.append(prompt_text)
+    content_parts.append({
+        "type": "text",
+        "text": prompt_text
+    })
 
-    # Smart retry parameters for transient rate-limit (429) or 503 errors
-    max_retries = 5
-    default_delays = [3.0, 5.0, 10.0, 15.0, 20.0]
+    messages = [
+        {
+            "role": "user",
+            "content": content_parts
+        }
+    ]
+
+    # Smart retry parameters for transient rate-limit (429) errors
+    max_retries = 3
+    default_delays = [3.0, 6.0, 12.0]
 
     for attempt in range(1, max_retries + 1):
         try:
-            logger.info(f"Sending extraction request to '{model_name}' for {document_type} (attempt {attempt}/{max_retries})...")
+            logger.info(f"Sending extraction request to Groq '{model_name}' for {document_type} (attempt {attempt}/{max_retries})...")
 
-            response = client.models.generate_content(
+            response = client.chat.completions.create(
                 model=model_name,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.1,
-                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-                )
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.1
             )
             
-            raw_response_text = response.text
-            logger.info(f"Received successful response from Gemini ({model_name}).")
+            raw_response_text = response.choices[0].message.content
+            logger.info(f"Received successful response from Groq ({model_name}).")
             
             # Parse JSON
             parsed_json = json.loads(raw_response_text)
@@ -173,48 +182,40 @@ def extract_with_gemini(
         except Exception as e:
             err_str = str(e)
             
-            # Handle non-retriable auth or model errors immediately
-            if "API_KEY_INVALID" in err_str or "API key not valid" in err_str:
+            # Handle non-retriable auth errors immediately
+            if "invalid_api_key" in err_str.lower() or "authentication failed" in err_str.lower() or "401" in err_str:
                 auth_err = (
-                    "Gemini API key authentication failed (400 INVALID_ARGUMENT / API_KEY_INVALID). "
-                    "The current GEMINI_API_KEY in backend/.env or .env is invalid or expired. "
-                    "Please replace it with a valid Google Gemini API key."
+                    "Groq API key authentication failed (401 / Invalid API Key). "
+                    "The current GROQ_API_KEY in backend/.env or .env is invalid or expired. "
+                    "Please replace it with a valid Groq API key."
                 )
                 logger.error(auth_err)
                 raise RuntimeError(auth_err) from e
 
-            if "404" in err_str or "NOT_FOUND" in err_str or "no longer available" in err_str:
-                model_err = (
-                    f"Gemini model '{model_name}' is not found or unavailable (404 NOT_FOUND). "
-                    "Please verify GEMINI_MODEL in backend/.env (recommended: gemini-3.6-flash)."
-                )
-                logger.error(model_err)
-                raise RuntimeError(model_err) from e
-
-            # Handle transient retriable errors (503 / 429)
-            if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
-                match = re.search(r'retry in (\d+(?:\.\d+)?)s', err_str, re.IGNORECASE)
+            # Handle transient retriable errors (429 Rate Limit)
+            if ("429" in err_str or "rate limit" in err_str.lower() or "rate_limit_exceeded" in err_str.lower()) and attempt < max_retries:
+                match = re.search(r'try again in (\d+(?:\.\d+)?)s', err_str, re.IGNORECASE)
                 if match:
-                    wait_sec = min(float(match.group(1)) + 1.0, 25.0)
+                    wait_sec = min(float(match.group(1)) + 1.0, 20.0)
                 else:
                     wait_sec = default_delays[attempt - 1]
                     
-                logger.warning(f"Transient rate-limit/503 from Gemini ({err_str[:120]}...). Retrying in {wait_sec:.1f}s (attempt {attempt}/{max_retries})...")
+                logger.warning(f"Transient 429 rate limit from Groq ({err_str[:120]}...). Retrying in {wait_sec:.1f}s (attempt {attempt}/{max_retries})...")
                 time.sleep(wait_sec)
                 continue
 
-            if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+            if "429" in err_str or "rate limit" in err_str.lower():
                 quota_err = (
-                    "Gemini API Free Tier Rate Limit / Quota Exceeded (429 RESOURCE_EXHAUSTED). "
-                    "Please wait 15-30 seconds before attempting another document upload."
+                    "Groq API Rate Limit Exceeded (429). "
+                    "Please wait a few seconds before attempting another document upload."
                 )
                 logger.error(quota_err)
                 raise RuntimeError(quota_err) from e
 
-            logger.error(f"Gemini API Extraction failed on attempt {attempt}: {err_str}")
-            raise RuntimeError(f"Gemini extraction failed: {err_str}") from e
+            logger.error(f"Groq API Extraction failed on attempt {attempt}: {err_str}")
+            raise RuntimeError(f"Groq extraction failed: {err_str}") from e
 
-    raise RuntimeError(f"Gemini extraction failed after {max_retries} attempts.")
+    raise RuntimeError(f"Groq extraction failed after {max_retries} attempts.")
 
 def normalize_extraction_json(
     data: Dict[str, Any],

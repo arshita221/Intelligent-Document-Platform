@@ -3,20 +3,20 @@ from app.core.config import Settings
 
 def test_settings_environment_loading_safe():
     # Test placeholder detection
-    s = Settings(GEMINI_API_KEY="your_gemini_api_key_here")
-    assert s.GEMINI_API_KEY == ""
-    assert s.is_gemini_api_key_configured is False
+    s = Settings(GROQ_API_KEY="your_groq_api_key_here")
+    assert s.GROQ_API_KEY == ""
+    assert s.is_groq_api_key_configured is False
 
     # Test quote stripping
-    s_quoted = Settings(GEMINI_API_KEY='"AIzaSyTestKeyForUnitTestingOnly12345"')
-    assert s_quoted.GEMINI_API_KEY == "AIzaSyTestKeyForUnitTestingOnly12345"
-    assert s_quoted.is_gemini_api_key_configured is True
+    s_quoted = Settings(GROQ_API_KEY='"gsk_TestKeyForUnitTestingOnly12345"')
+    assert s_quoted.GROQ_API_KEY == "gsk_TestKeyForUnitTestingOnly12345"
+    assert s_quoted.is_groq_api_key_configured is True
 
     # Test default model setting
-    s_model = Settings(GEMINI_MODEL="gemini-3.6-flash")
-    assert s_model.GEMINI_MODEL == "gemini-3.6-flash"
+    s_model = Settings(GROQ_MODEL="qwen/qwen3.8-27b")
+    assert s_model.GROQ_MODEL == "qwen/qwen3.8-27b"
 
     # Test empty key
-    s_empty = Settings(GEMINI_API_KEY="")
-    assert s_empty.GEMINI_API_KEY == ""
-    assert s_empty.is_gemini_api_key_configured is False
+    s_empty = Settings(GROQ_API_KEY="")
+    assert s_empty.GROQ_API_KEY == ""
+    assert s_empty.is_groq_api_key_configured is False

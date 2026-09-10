@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Security & API
-    GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-3.6-flash"
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
     
     # Database
     DATABASE_URL: str = "sqlite:///./financial_docs.db"
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # App environment
     ENVIRONMENT: str = "development"
 
-    @field_validator("GEMINI_API_KEY", mode="after")
+    @field_validator("GROQ_API_KEY", mode="after")
     @classmethod
     def clean_api_key(cls, v: str) -> str:
         if not v:
@@ -31,14 +31,14 @@ class Settings(BaseSettings):
         # Strip surrounding quotes and whitespace
         cleaned = v.strip().strip("'\"").strip()
         # Ignore obvious placeholder strings
-        if cleaned.lower() in ("your_gemini_api_key_here", "your_api_key_here", "your_api_key", "your_gemini_api_key", "changeme"):
+        if cleaned.lower() in ("your_groq_api_key_here", "your_api_key_here", "your_api_key", "your_groq_api_key", "changeme"):
             return ""
         return cleaned
 
     @property
-    def is_gemini_api_key_configured(self) -> bool:
-        """Returns True if a non-empty, non-placeholder API key is set."""
-        return bool(self.GEMINI_API_KEY and len(self.GEMINI_API_KEY) > 10)
+    def is_groq_api_key_configured(self) -> bool:
+        """Returns True if a non-empty, non-placeholder Groq API key is set."""
+        return bool(self.GROQ_API_KEY and len(self.GROQ_API_KEY) > 10)
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),

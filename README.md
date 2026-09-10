@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green)
-![Gemini](https://img.shields.io/badge/Gemini-2.5--Flash-orange)
+![Groq](https://img.shields.io/badge/Groq-qwen%2Fqwen3.8--27b-orange)
 
 An end-to-end production-ready technical case study platform for ingesting, validating, extracting, mathematically validating, persisting, and visualizing financial documents (Invoices, Balance Sheets, Profit & Loss Statements, and Cash Flow Statements).
 
@@ -16,7 +16,7 @@ Financial document processing often suffers from two major vulnerabilities when 
 2. **Brittle Pre-Processing**: Systems frequently crash when presented with corrupt files, multi-page PDFs, scanned images, or malformed data.
 
 **FinIntel** solves this by strictly separating the system architecture into distinct layers:
-- **Google Gemini 2.5 Flash** performs **multimodal structured extraction** into Pydantic JSON models.
+- **Groq Qwen 3.8 27B Vision & Multimodal LLM** performs **multimodal structured extraction** into Pydantic JSON models.
 - **Python Deterministic Engine** executes exact `Decimal` arithmetic validation checks across document types and multi-period statements.
 
 ---
@@ -44,7 +44,7 @@ flowchart TD
     API[FastAPI Backend Web Service]
     V[Multilayer File Validator]
     P[PyMuPDF / Pillow Document Processor]
-    AI[Google Gemini 2.5 Flash API]
+    AI[Groq API qwen/qwen3.8-27b]
     X[Structured JSON Normalizer]
     VE[Deterministic Financial Validation Engine]
     DB[(SQLite / Supabase PostgreSQL)]
@@ -67,7 +67,7 @@ flowchart TD
 
 | Layer | Technology | Rationale |
 | :--- | :--- | :--- |
-| **AI / LLM** | Google Gemini 2.5 Flash | Free/low-cost tier, ultra-fast latency, native multimodal image/document understanding, and native JSON schema output. |
+| **AI / LLM** | Groq (`qwen/qwen3.8-27b`) | Ultra-fast inference engine, native multimodal vision/document understanding, and JSON Object Mode output. |
 | **Backend Framework** | FastAPI (Python 3.10+) | Asynchronous, automatic OpenAPI/Swagger documentation generation, strict data validation with Pydantic v2. |
 | **Document Engine** | PyMuPDF (`fitz`) & Pillow | High-performance C-backed PDF text parsing, page rendering (200 DPI PNGs for scanned OCR), and image verification. |
 | **Financial Validation** | Python `Decimal` Engine | Absolute mathematical precision for currency arithmetic, configurable tolerance, and multi-period period isolation. |
@@ -86,7 +86,7 @@ FILE VALIDATION (Existence, size limits, magic bytes, PDF page count ≤ 3, imag
   ↓
 DOCUMENT PROCESSING (PyMuPDF text extraction or page rendering to 200 DPI PNG images)
   ↓
-AI STRUCTURED EXTRACTION (Gemini 2.5 Flash prompt enforcing zero hallucination & null missing values)
+AI STRUCTURED EXTRACTION (Groq Qwen 3.8 27B vision prompt enforcing zero hallucination & null missing values)
   ↓
 NORMALIZATION (Currency symbol stripping, thousand separator handling, (5,000) -> -5000)
   ↓
@@ -162,9 +162,10 @@ The platform runs document-specific deterministic checks in Python:
    ```bash
    cp backend/.env.example backend/.env
    ```
-   Edit `backend/.env` and set your `GEMINI_API_KEY`:
+   Edit `backend/.env` and set your `GROQ_API_KEY`:
    ```env
-   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   GROQ_API_KEY=your_actual_groq_api_key_here
+   GROQ_MODEL=qwen/qwen3.8-27b
    DATABASE_URL=sqlite:///./financial_docs.db
    MAX_FILE_SIZE_MB=10
    VALIDATION_ABSOLUTE_TOLERANCE=1.0
@@ -191,7 +192,7 @@ The platform runs document-specific deterministic checks in Python:
 
 ## 8. Running Automated Tests
 
-The test suite runs 100% offline without needing a live Gemini API key (all AI calls are mocked using `pytest` fixtures).
+The test suite runs 100% offline without needing a live Groq API key (all AI calls are mocked using `pytest` fixtures).
 
 Execute tests from the project root:
 ```bash
@@ -212,7 +213,8 @@ PYTHONPATH=backend pytest backend/tests/ -v
 
 | Variable | Description | Default / Example |
 | :--- | :--- | :--- |
-| `GEMINI_API_KEY` | Google Gemini API key for extraction | `AIzaSy...` |
+| `GROQ_API_KEY` | Groq API key for extraction | `gsk_...` |
+| `GROQ_MODEL` | Groq Multimodal Vision Model | `qwen/qwen3.8-27b` |
 | `DATABASE_URL` | SQLAlchemy database URL | `sqlite:///./financial_docs.db` or `postgresql://...` |
 | `MAX_FILE_SIZE_MB` | Maximum allowed upload size | `10` |
 | `VALIDATION_ABSOLUTE_TOLERANCE` | Max absolute variance for PASS status | `1.0` |
@@ -236,7 +238,8 @@ PYTHONPATH=backend pytest backend/tests/ -v
    - Build Command: `pip install -r backend/requirements.txt`
    - Start Command: `PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - Add Environment Variables in Render Dashboard:
-     - `GEMINI_API_KEY`: Your key
+     - `GROQ_API_KEY`: Your key
+     - `GROQ_MODEL`: `qwen/qwen3.8-27b`
      - `DATABASE_URL`: Your Supabase connection string
      - `ENVIRONMENT`: `production`
 

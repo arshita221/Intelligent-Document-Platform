@@ -44,7 +44,7 @@ def test_process_invalid_file_extension():
     )
     assert response.status_code == 400
 
-@patch("app.services.document_service.extract_with_gemini")
+@patch("app.services.document_service.extract_with_groq")
 def test_process_document_success(mock_extract, mock_invoice_passing):
     mock_extract.return_value = mock_invoice_passing
     
