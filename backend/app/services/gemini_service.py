@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
@@ -141,9 +142,9 @@ def extract_with_gemini(
 
     contents.append(prompt_text)
 
-    # Retry parameters for transient rate-limit or 503 errors
-    max_retries = 3
-    retry_delay = 2.0
+    # Smart retry parameters for transient rate-limit (429) or 503 errors
+    max_retries = 4
+    default_delays = [3.0, 6.0, 12.0, 20.0]
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -154,7 +155,8 @@ def extract_with_gemini(
                 contents=contents,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.1
+                    temperature=0.1,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
                 )
             )
             
@@ -191,10 +193,24 @@ def extract_with_gemini(
 
             # Handle transient retriable errors (503 / 429)
             if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
-                logger.warning(f"Transient error from Gemini ({err_str[:100]}). Retrying in {retry_delay}s...")
-                time.sleep(retry_delay)
-                retry_delay *= 1.5
+                # Check if error specifies retry delay in seconds
+                match = re.search(r'retry in (\d+(?:\.\d+)?)s', err_str, re.IGNORECASE)
+                if match:
+                    wait_sec = min(float(match.group(1)) + 1.0, 30.0)
+                else:
+                    wait_sec = default_delays[attempt - 1]
+                    
+                logger.warning(f"Transient rate-limit/503 from Gemini ({err_str[:120]}...). Retrying in {wait_sec:.1f}s (attempt {attempt}/{max_retries})...")
+                time.sleep(wait_sec)
                 continue
+
+            if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                quota_err = (
+                    "Gemini API Free Tier Rate Limit / Quota Exceeded (429 RESOURCE_EXHAUSTED). "
+                    "Please wait a few seconds before attempting another document upload."
+                )
+                logger.error(quota_err)
+                raise RuntimeError(quota_err) from e
 
             logger.error(f"Gemini API Extraction failed on attempt {attempt}: {err_str}")
             raise RuntimeError(f"Gemini extraction failed: {err_str}") from e
