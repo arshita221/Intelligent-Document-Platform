@@ -143,8 +143,8 @@ def extract_with_gemini(
     contents.append(prompt_text)
 
     # Smart retry parameters for transient rate-limit (429) or 503 errors
-    max_retries = 4
-    default_delays = [3.0, 6.0, 12.0, 20.0]
+    max_retries = 5
+    default_delays = [3.0, 5.0, 10.0, 15.0, 20.0]
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -193,10 +193,9 @@ def extract_with_gemini(
 
             # Handle transient retriable errors (503 / 429)
             if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
-                # Check if error specifies retry delay in seconds
                 match = re.search(r'retry in (\d+(?:\.\d+)?)s', err_str, re.IGNORECASE)
                 if match:
-                    wait_sec = min(float(match.group(1)) + 1.0, 30.0)
+                    wait_sec = min(float(match.group(1)) + 1.0, 25.0)
                 else:
                     wait_sec = default_delays[attempt - 1]
                     
@@ -207,7 +206,7 @@ def extract_with_gemini(
             if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
                 quota_err = (
                     "Gemini API Free Tier Rate Limit / Quota Exceeded (429 RESOURCE_EXHAUSTED). "
-                    "Please wait a few seconds before attempting another document upload."
+                    "Please wait 15-30 seconds before attempting another document upload."
                 )
                 logger.error(quota_err)
                 raise RuntimeError(quota_err) from e

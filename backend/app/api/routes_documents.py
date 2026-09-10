@@ -22,6 +22,7 @@ async def process_document(
 ):
     """
     Ingests, validates, extracts AI financial data, validates math, and persists results.
+    Returns DocumentResponse (processing_status: PASS or FAILED).
     """
     logger.info(f"Received upload request for filename='{file.filename}', document_type='{document_type}'")
     
@@ -41,7 +42,7 @@ async def process_document(
         if status_code in (400, 500):
             json_compatible_detail = json.loads(response_data.model_dump_json())
             raise HTTPException(status_code=status_code, detail=json_compatible_detail)
-            
+
         return response_data
     finally:
         if os.path.exists(tmp_path):
