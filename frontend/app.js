@@ -53,14 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const result = await response.json();
+            const docData = result.document_name ? result : (result.detail && result.detail.document_name ? result.detail : null);
 
-            if (!response.ok) {
-                const detail = result.detail || result;
-                alert(`Processing Error: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`);
-            } else {
-                currentDocumentData = result;
-                openModal(result);
+            if (docData) {
+                currentDocumentData = docData;
+                openModal(docData);
                 loadDocuments();
+            } else {
+                const detailMsg = result.detail || result;
+                alert(`Processing Error: ${typeof detailMsg === 'string' ? detailMsg : JSON.stringify(detailMsg)}`);
             }
         } catch (err) {
             alert(`Network or Server error: ${err.message}`);
@@ -174,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 </div>
                 ${fv.errors.length > 0 ? `<div class="operands-list" style="color:var(--status-fail-text);">Errors: ${fv.errors.join('; ')}</div>` : ''}
+                ${data.error_message ? `<div class="operands-list" style="color:var(--status-fail-text); margin-top:0.5rem;"><strong>Processing Note:</strong> ${escapeHtml(data.error_message)}</div>` : ''}
             </div>
         `;
 
@@ -248,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Line Items & Tables Tab
         const lineItemsContainer = document.getElementById('lineitems-container');
         const lineItems = data.extracted_data.line_items || [];
-        const tables = data.extracted_data.tables || [];
 
         let lineItemsHtml = '<h4>Line Items</h4>';
         if (lineItems.length === 0) {

@@ -39,7 +39,6 @@ async def process_document(
             db=db
         )
         if status_code in (400, 500):
-            # Convert model to JSON-compatible dict for HTTPException detail
             json_compatible_detail = json.loads(response_data.model_dump_json())
             raise HTTPException(status_code=status_code, detail=json_compatible_detail)
             
