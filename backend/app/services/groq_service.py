@@ -173,69 +173,66 @@ def extract_with_groq(
         }
     ]
 
-    # Smart retry parameters for transient rate-limit (429) errors
-    max_retries = 3
-    default_delays = [3.0, 6.0, 12.0]
+    # Execute single Groq extraction request
+    try:
+        logger.info(f"Sending extraction request to Groq '{model_name}' for {document_type}...")
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.1,
+            max_tokens=950
+        )
+        raw_response_text = response.choices[0].message.content
+        logger.info(f"Received successful response from Groq ({model_name}).")
+        parsed_json = json.loads(raw_response_text)
+        return normalize_extraction_json(parsed_json, document_type, raw_text_pages)
 
-    for attempt in range(1, max_retries + 1):
-        try:
-            logger.info(f"Sending extraction request to Groq '{model_name}' for {document_type} (attempt {attempt}/{max_retries})...")
-
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=950
+    except Exception as e:
+        err_str = str(e)
+        from groq import RateLimitError
+        
+        # Check for 401 Authentication error
+        if "invalid_api_key" in err_str.lower() or "authentication failed" in err_str.lower() or "401" in err_str:
+            auth_err = (
+                "Groq API key authentication failed (401 / Invalid API Key). "
+                "The current GROQ_API_KEY in backend/.env or .env is invalid or expired. "
+                "Please replace it with a valid Groq API key."
             )
+            logger.error(auth_err)
+            raise RuntimeError(auth_err) from e
+
+        # Check for 429 Rate Limit error
+        if isinstance(e, RateLimitError) or "429" in err_str or "rate limit" in err_str.lower():
+            retry_after_val = None
+            if hasattr(e, "response") and e.response is not None:
+                retry_after_val = e.response.headers.get("retry-after") or e.response.headers.get("x-ratelimit-reset-tokens")
             
-            raw_response_text = response.choices[0].message.content
-            logger.info(f"Received successful response from Groq ({model_name}).")
-            
-            # Parse JSON
-            parsed_json = json.loads(raw_response_text)
-            
-            # Post-process & normalize numeric values safely
-            extraction = normalize_extraction_json(parsed_json, document_type, raw_text_pages)
-            return extraction
+            # If server specifies a short retry-after (<= 2.0 seconds), perform at most one brief retry
+            if retry_after_val:
+                try:
+                    wait_sec = float(str(retry_after_val).replace("s", "").strip())
+                    if 0 < wait_sec <= 2.0:
+                        logger.warning(f"Server retry-after indicates safe wait of {wait_sec:.1f}s. Performing single retry...")
+                        time.sleep(wait_sec)
+                        retry_resp = client.chat.completions.create(
+                            model=model_name,
+                            messages=messages,
+                            response_format={"type": "json_object"},
+                            temperature=0.1,
+                            max_tokens=950
+                        )
+                        parsed_json = json.loads(retry_resp.choices[0].message.content)
+                        return normalize_extraction_json(parsed_json, document_type, raw_text_pages)
+                except Exception as retry_err:
+                    logger.error(f"Single retry failed: {retry_err}")
 
-        except Exception as e:
-            err_str = str(e)
-            
-            # Handle non-retriable auth errors immediately
-            if "invalid_api_key" in err_str.lower() or "authentication failed" in err_str.lower() or "401" in err_str:
-                auth_err = (
-                    "Groq API key authentication failed (401 / Invalid API Key). "
-                    "The current GROQ_API_KEY in backend/.env or .env is invalid or expired. "
-                    "Please replace it with a valid Groq API key."
-                )
-                logger.error(auth_err)
-                raise RuntimeError(auth_err) from e
+            quota_err = f"Groq API Rate Limit Exceeded (429): {err_str}"
+            logger.error(quota_err)
+            raise RuntimeError(quota_err) from e
 
-            # Handle transient retriable errors (429 Rate Limit)
-            if ("429" in err_str or "rate limit" in err_str.lower() or "rate_limit_exceeded" in err_str.lower()) and attempt < max_retries:
-                match = re.search(r'try again in (\d+(?:\.\d+)?)s', err_str, re.IGNORECASE)
-                if match:
-                    wait_sec = min(float(match.group(1)) + 1.0, 20.0)
-                else:
-                    wait_sec = default_delays[attempt - 1]
-                    
-                logger.warning(f"Transient 429 rate limit from Groq ({err_str[:120]}...). Retrying in {wait_sec:.1f}s (attempt {attempt}/{max_retries})...")
-                time.sleep(wait_sec)
-                continue
-
-            if "429" in err_str or "rate limit" in err_str.lower():
-                quota_err = (
-                    "Groq API Rate Limit Exceeded (429). "
-                    "Please wait a few seconds before attempting another document upload."
-                )
-                logger.error(quota_err)
-                raise RuntimeError(quota_err) from e
-
-            logger.error(f"Groq API Extraction failed on attempt {attempt}: {err_str}")
-            raise RuntimeError(f"Groq extraction failed: {err_str}") from e
-
-    raise RuntimeError(f"Groq extraction failed after {max_retries} attempts.")
+        logger.error(f"Groq API Extraction failed: {err_str}")
+        raise RuntimeError(f"Groq extraction failed: {err_str}") from e
 
 def normalize_extraction_json(
     data: Dict[str, Any],

@@ -41,5 +41,36 @@ def run_real_extractions():
         # Pacing delay between Groq API calls
         time.sleep(3)
 
+def diagnose_groq_limits():
+    from app.core.config import settings
+    from groq import Groq, RateLimitError
+    client = Groq(api_key=settings.GROQ_API_KEY)
+    print("\n--- DIAGNOSING GROQ API RATE LIMIT HEADERS ---")
+    print(f"Model: {settings.GROQ_MODEL}")
+    print(f"GROQ_API_KEY Configured: {settings.is_groq_api_key_configured}")
+    
+    try:
+        raw_resp = client.chat.completions.with_raw_response.create(
+            model=settings.GROQ_MODEL,
+            messages=[{"role": "user", "content": "Respond in json format: {\"test\": \"ok\"}"}],
+            response_format={"type": "json_object"},
+            max_tokens=50
+        )
+        print("API Status Code:", raw_resp.status_code)
+        print("Rate Limit Headers:")
+        for k, v in raw_resp.headers.items():
+            if k.lower().startswith(("x-ratelimit", "retry-after")):
+                print(f"  {k}: {v}")
+    except RateLimitError as rle:
+        print("CAUGHT RateLimitError 429:")
+        print("Message:", rle.message)
+        print("Headers:")
+        if hasattr(rle, "response") and rle.response is not None:
+            for k, v in rle.response.headers.items():
+                if k.lower().startswith(("x-ratelimit", "retry-after")):
+                    print(f"  {k}: {v}")
+    except Exception as ex:
+        print("CAUGHT Exception:", type(ex), str(ex))
+
 if __name__ == "__main__":
-    run_real_extractions()
+    diagnose_groq_limits()
