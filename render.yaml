@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: financial-document-intelligence
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: MAX_FILE_SIZE_MB
+        value: "10"
+      - key: VALIDATION_ABSOLUTE_TOLERANCE
+        value: "1.0"
+      - key: VALIDATION_RELATIVE_TOLERANCE
+        value: "0.01"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false

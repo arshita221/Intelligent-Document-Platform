@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinIntel - AI Financial Document Extraction & Validation</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="navbar">
+            <div class="brand">
+                <div class="logo-icon">📊</div>
+                <div>
+                    <h1>FinIntel Platform</h1>
+                    <p class="subtitle">AI-Powered Financial Document Extraction & Validation Engine</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-tech">Gemini 2.5 Flash</span>
+                <span class="badge badge-tech">PyMuPDF</span>
+                <span class="badge badge-tech">Deterministic Engine</span>
+            </div>
+        </header>
+
+        <!-- Main Content Layout -->
+        <main class="main-content">
+            <!-- Left Side: Upload & Control Panel -->
+            <section class="panel upload-panel">
+                <h2 class="panel-title">Upload Financial Document</h2>
+                
+                <form id="upload-form">
+                    <div class="form-group">
+                        <label for="document_type">Document Type</label>
+                        <select id="document_type" name="document_type" required>
+                            <option value="invoice">Invoice</option>
+                            <option value="balance_sheet">Balance Sheet</option>
+                            <option value="profit_loss">Profit & Loss Statement</option>
+                            <option value="cash_flow">Cash Flow Statement</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select File (PDF, JPG, PNG)</label>
+                        <div class="file-dropzone" id="dropzone">
+                            <input type="file" id="file-input" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="dropzone-text">
+                                <span class="upload-icon">📁</span>
+                                <p id="file-name-display">Drag & drop or <span class="browse-link">browse file</span></p>
+                                <span class="file-limits">PDF (Max 3 Pages), JPG, PNG • Max 10 MB</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn btn-primary">
+                        <span class="btn-text">Process & Validate Document</span>
+                    </button>
+                </form>
+
+                <!-- Processing Overlay Status -->
+                <div id="processing-status" class="processing-card hidden">
+                    <div class="spinner"></div>
+                    <div class="status-info">
+                        <h4 id="status-title">Processing Document...</h4>
+                        <p id="status-desc">Extracting multimodal structure with Gemini 2.5 Flash...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Dashboard Overview Metrics & Document History -->
+            <section class="panel dashboard-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Platform Dashboard</h2>
+                    <button id="refresh-btn" class="btn btn-secondary btn-sm">🔄 Refresh List</button>
+                </div>
+
+                <!-- Metric Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Total Documents</span>
+                        <span id="metric-total" class="metric-value">0</span>
+                    </div>
+                    <div class="metric-card metric-pass">
+                        <span class="metric-label">Passed Validation</span>
+                        <span id="metric-passed" class="metric-value">0</span>
+                    </div>
+                    <div class="metric-card metric-fail">
+                        <span class="metric-label">Failed / Issues</span>
+                        <span id="metric-failed" class="metric-value">0</span>
+                    </div>
+                </div>
+
+                <!-- Processed Documents Table -->
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Original Filename</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Pages</th>
+                                <th>Processed At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-table-body">
+                            <tr>
+                                <td colspan="6" class="empty-state">No documents processed yet. Upload a file above to begin.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Result Inspection Modal / View Panel -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h3 id="modal-doc-name">Document Details</h3>
+                        <span id="modal-status-badge" class="badge">STATUS</span>
+                    </div>
+                    <button id="close-modal-btn" class="btn-icon">✕</button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-summary">Summary & File Validation</button>
+                    <button class="tab-btn" data-tab="tab-validation">Deterministic Math Checks</button>
+                    <button class="tab-btn" data-tab="tab-fields">Extracted Fields</button>
+                    <button class="tab-btn" data-tab="tab-lineitems">Line Items & Tables</button>
+                    <button class="tab-btn" data-tab="tab-raw">Raw JSON</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Tab 1: Summary -->
+                    <div id="tab-summary" class="tab-content active">
+                        <div class="details-grid">
+                            <div class="detail-group">
+                                <label>Original Filename</label>
+                                <span id="detail-filename">-</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Document Type</label>
+                                <span id="detail-type">-</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>File Format</label>
+                                <span id="detail-mime">-</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Page Count</label>
+                                <span id="detail-pages">-</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Processing Time</label>
+                                <span id="detail-time">-</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Extractor Engine</label>
+                                <span id="detail-extractor">-</span>
+                            </div>
+                        </div>
+
+                        <h4>Pre-Extraction File Validation Checks</h4>
+                        <div id="file-validation-details" class="checks-list"></div>
+                    </div>
+
+                    <!-- Tab 2: Math Validation Checks -->
+                    <div id="tab-validation" class="tab-content">
+                        <div id="validation-checks-container"></div>
+                    </div>
+
+                    <!-- Tab 3: Extracted Fields -->
+                    <div id="tab-fields" class="tab-content">
+                        <div id="fields-container"></div>
+                    </div>
+
+                    <!-- Tab 4: Line Items & Tables -->
+                    <div id="tab-lineitems" class="tab-content">
+                        <div id="lineitems-container"></div>
+                    </div>
+
+                    <!-- Tab 5: Raw JSON -->
+                    <div id="tab-raw" class="tab-content">
+                        <div class="raw-json-header">
+                            <span>Complete API Response Payload</span>
+                            <button id="copy-json-btn" class="btn btn-secondary btn-sm">📋 Copy JSON</button>
+                        </div>
+                        <pre id="raw-json-display"><code>{}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

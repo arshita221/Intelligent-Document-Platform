@@ -1,0 +1,138 @@
+{
+  "id": "e4a7a8d0-2391-4c12-9c3f-7b2a9e1d8801",
+  "document_name": "sample_invoice_20250115_143000_a1b2c3d4",
+  "document_type": "invoice",
+  "original_filename": "sample_invoice.pdf",
+  "file_type": "application/pdf",
+  "page_count": 1,
+  "processing_status": "PASS",
+  "uploaded_at": "2025-01-15T14:30:00.000Z",
+  "processed_at": "2025-01-15T14:30:01.250Z",
+  "file_validation": {
+    "is_valid": true,
+    "file_exists": true,
+    "is_not_empty": true,
+    "supported_extension": true,
+    "signature_valid": true,
+    "page_count": 1,
+    "page_count_valid": true,
+    "decodable": true,
+    "readable": true,
+    "file_size_bytes": 14200,
+    "detected_mime": "application/pdf",
+    "errors": []
+  },
+  "extracted_data": {
+    "document_type": "invoice",
+    "fields": [
+      {
+        "name": "invoice_number",
+        "value": "INV-2025-8899",
+        "normalized_value": null,
+        "evidence": "Invoice Number: INV-2025-8899",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "subtotal",
+        "value": "$1,500.00",
+        "normalized_value": 1500.0,
+        "evidence": "Subtotal: $1,500.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "tax",
+        "value": "$150.00",
+        "normalized_value": 150.0,
+        "evidence": "Tax (10% GST): $150.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "total",
+        "value": "$1,650.00",
+        "normalized_value": 1650.0,
+        "evidence": "Total Amount: $1,650.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      }
+    ],
+    "line_items": [
+      {
+        "description": "Cloud Server Infrastructure",
+        "quantity": 5.0,
+        "unit_price": 100.0,
+        "amount": 500.0,
+        "tax": null,
+        "total": 500.0,
+        "evidence": "1. Cloud Server Infrastructure 5.0 $100.00 $500.00",
+        "page_number": 1
+      }
+    ],
+    "tables": [],
+    "periods": [],
+    "notes": [],
+    "raw_text_by_page": [
+      {
+        "page_number": 1,
+        "text": "ACME CORPORATION - INVOICE..."
+      }
+    ],
+    "metadata": {
+      "normalized": true
+    }
+  },
+  "validation": {
+    "overall_status": "PASS",
+    "passed_count": 4,
+    "failed_count": 0,
+    "not_applicable_count": 0,
+    "checks": [
+      {
+        "check_name": "Line Item 1: Quantity × Unit Price ≈ Line Total",
+        "formula": "quantity * unit_price ≈ line_total",
+        "operands": {
+          "quantity": 5.0,
+          "unit_price": 100.0,
+          "line_total": 500.0
+        },
+        "calculated_value": 500.0,
+        "reported_value": 500.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Subtotal + Tax ≈ Total",
+        "formula": "subtotal + tax ≈ total",
+        "operands": {
+          "subtotal": 1500.0,
+          "tax": 150.0,
+          "total": 1650.0
+        },
+        "calculated_value": 1650.0,
+        "reported_value": 1650.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      }
+    ]
+  },
+  "processing_metadata": {
+    "processing_time_seconds": 1.25,
+    "timestamp": "2025-01-15T14:30:01.250Z",
+    "extractor_used": "gemini-2.5-flash",
+    "pages_processed": 1,
+    "environment": "development"
+  },
+  "error_message": null
+}
