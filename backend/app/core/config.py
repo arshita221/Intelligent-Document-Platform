@@ -1,4 +1,6 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Financial Document Intelligence Platform"
@@ -20,8 +22,25 @@ class Settings(BaseSettings):
     # App environment
     ENVIRONMENT: str = "development"
 
+    @field_validator("GEMINI_API_KEY", mode="after")
+    @classmethod
+    def clean_api_key(cls, v: str) -> str:
+        if not v:
+            return ""
+        # Strip surrounding quotes and whitespace
+        cleaned = v.strip().strip("'\"").strip()
+        # Ignore obvious placeholder strings
+        if cleaned.lower() in ("your_gemini_api_key_here", "your_api_key_here", "your_api_key", "your_gemini_api_key", "changeme"):
+            return ""
+        return cleaned
+
+    @property
+    def is_gemini_api_key_configured(self) -> bool:
+        """Returns True if a non-empty, non-placeholder API key is set."""
+        return bool(self.GEMINI_API_KEY and len(self.GEMINI_API_KEY) > 10)
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )

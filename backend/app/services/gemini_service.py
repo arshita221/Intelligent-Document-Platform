@@ -96,10 +96,17 @@ def extract_with_gemini(
     """
     Extracts financial structured data using Google Gemini 2.5 Flash.
     """
-    api_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        logger.warning("GEMINI_API_KEY not configured. Falling back to default empty extraction.")
-        raise ValueError("GEMINI_API_KEY environment variable is missing or empty.")
+    # Safe diagnostic logging - NEVER log actual key value
+    logger.info(f"GEMINI_API_KEY configured: {settings.is_gemini_api_key_configured}")
+
+    api_key = settings.GEMINI_API_KEY
+    if not api_key or not settings.is_gemini_api_key_configured:
+        err_msg = (
+            "GEMINI_API_KEY is not configured or contains a placeholder. "
+            "Please set a valid Google Gemini API key in backend/.env or .env file."
+        )
+        logger.error(err_msg)
+        raise ValueError(err_msg)
 
     prompt_text = EXTRACTION_SYSTEM_PROMPT.format(document_type=document_type)
 
@@ -153,8 +160,18 @@ def extract_with_gemini(
         return extraction
 
     except Exception as e:
-        logger.error(f"Gemini API Extraction failed: {str(e)}")
-        raise RuntimeError(f"Gemini extraction failed: {str(e)}")
+        err_str = str(e)
+        if "API_KEY_INVALID" in err_str or "API key not valid" in err_str:
+            auth_err = (
+                "Gemini API key authentication failed (400 INVALID_ARGUMENT / API_KEY_INVALID). "
+                "The current GEMINI_API_KEY in backend/.env or .env is invalid or expired. "
+                "Please replace it with a valid Google Gemini API key."
+            )
+            logger.error(auth_err)
+            raise RuntimeError(auth_err) from e
+
+        logger.error(f"Gemini API Extraction failed: {err_str}")
+        raise RuntimeError(f"Gemini extraction failed: {err_str}") from e
 
 def normalize_extraction_json(
     data: Dict[str, Any],
