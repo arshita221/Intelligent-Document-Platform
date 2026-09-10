@@ -12,6 +12,10 @@ def test_settings_environment_loading_safe():
     assert s_quoted.GEMINI_API_KEY == "AIzaSyTestKeyForUnitTestingOnly12345"
     assert s_quoted.is_gemini_api_key_configured is True
 
+    # Test default model setting
+    s_model = Settings(GEMINI_MODEL="gemini-3.6-flash")
+    assert s_model.GEMINI_MODEL == "gemini-3.6-flash"
+
     # Test empty key
     s_empty = Settings(GEMINI_API_KEY="")
     assert s_empty.GEMINI_API_KEY == ""

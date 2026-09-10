@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
 from app.core.logging_config import logger
@@ -94,10 +95,13 @@ def extract_with_gemini(
     is_scanned: bool = False
 ) -> DocumentExtraction:
     """
-    Extracts financial structured data using Google Gemini 2.5 Flash.
+    Extracts financial structured data using Google Gemini API.
     """
+    model_name = settings.GEMINI_MODEL or "gemini-3.6-flash"
+
     # Safe diagnostic logging - NEVER log actual key value
     logger.info(f"GEMINI_API_KEY configured: {settings.is_gemini_api_key_configured}")
+    logger.info(f"Using Gemini Model: {model_name}")
 
     api_key = settings.GEMINI_API_KEY
     if not api_key or not settings.is_gemini_api_key_configured:
@@ -119,59 +123,83 @@ def extract_with_gemini(
         prompt_text += f"\n\nNATIVE TEXT IN DOCUMENT:\n{text_content_snippet}"
 
     # Import google-genai SDK
-    try:
-        from google import genai
-        from google.genai import types
-        
-        client = genai.Client(api_key=api_key)
-        
-        # Build contents array with images and prompt text
-        contents = []
-        
-        # Add page images for multimodal extraction
-        for idx, img_bytes in enumerate(page_images):
-            part = types.Part.from_bytes(
-                data=img_bytes,
-                mime_type="image/png"
-            )
-            contents.append(part)
-
-        contents.append(prompt_text)
-
-        logger.info(f"Sending extraction request to gemini-2.5-flash for {document_type}...")
-
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=contents,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1
-            )
+    from google import genai
+    from google.genai import types
+    
+    client = genai.Client(api_key=api_key)
+    
+    # Build contents array with images and prompt text
+    contents = []
+    
+    # Add page images for multimodal extraction
+    for idx, img_bytes in enumerate(page_images):
+        part = types.Part.from_bytes(
+            data=img_bytes,
+            mime_type="image/png"
         )
-        
-        raw_response_text = response.text
-        logger.info("Received response from Gemini 2.5 Flash.")
-        
-        # Parse JSON
-        parsed_json = json.loads(raw_response_text)
-        
-        # Post-process & normalize numeric values safely
-        extraction = normalize_extraction_json(parsed_json, document_type, raw_text_pages)
-        return extraction
+        contents.append(part)
 
-    except Exception as e:
-        err_str = str(e)
-        if "API_KEY_INVALID" in err_str or "API key not valid" in err_str:
-            auth_err = (
-                "Gemini API key authentication failed (400 INVALID_ARGUMENT / API_KEY_INVALID). "
-                "The current GEMINI_API_KEY in backend/.env or .env is invalid or expired. "
-                "Please replace it with a valid Google Gemini API key."
+    contents.append(prompt_text)
+
+    # Retry parameters for transient rate-limit or 503 errors
+    max_retries = 3
+    retry_delay = 2.0
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Sending extraction request to '{model_name}' for {document_type} (attempt {attempt}/{max_retries})...")
+
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
+                )
             )
-            logger.error(auth_err)
-            raise RuntimeError(auth_err) from e
+            
+            raw_response_text = response.text
+            logger.info(f"Received successful response from Gemini ({model_name}).")
+            
+            # Parse JSON
+            parsed_json = json.loads(raw_response_text)
+            
+            # Post-process & normalize numeric values safely
+            extraction = normalize_extraction_json(parsed_json, document_type, raw_text_pages)
+            return extraction
 
-        logger.error(f"Gemini API Extraction failed: {err_str}")
-        raise RuntimeError(f"Gemini extraction failed: {err_str}") from e
+        except Exception as e:
+            err_str = str(e)
+            
+            # Handle non-retriable auth or model errors immediately
+            if "API_KEY_INVALID" in err_str or "API key not valid" in err_str:
+                auth_err = (
+                    "Gemini API key authentication failed (400 INVALID_ARGUMENT / API_KEY_INVALID). "
+                    "The current GEMINI_API_KEY in backend/.env or .env is invalid or expired. "
+                    "Please replace it with a valid Google Gemini API key."
+                )
+                logger.error(auth_err)
+                raise RuntimeError(auth_err) from e
+
+            if "404" in err_str or "NOT_FOUND" in err_str or "no longer available" in err_str:
+                model_err = (
+                    f"Gemini model '{model_name}' is not found or unavailable (404 NOT_FOUND). "
+                    "Please verify GEMINI_MODEL in backend/.env (recommended: gemini-3.6-flash)."
+                )
+                logger.error(model_err)
+                raise RuntimeError(model_err) from e
+
+            # Handle transient retriable errors (503 / 429)
+            if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
+                logger.warning(f"Transient error from Gemini ({err_str[:100]}). Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+                retry_delay *= 1.5
+                continue
+
+            logger.error(f"Gemini API Extraction failed on attempt {attempt}: {err_str}")
+            raise RuntimeError(f"Gemini extraction failed: {err_str}") from e
+
+    raise RuntimeError(f"Gemini extraction failed after {max_retries} attempts.")
 
 def normalize_extraction_json(
     data: Dict[str, Any],

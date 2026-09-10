@@ -9,6 +9,8 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
       - key: MAX_FILE_SIZE_MB
         value: "10"
       - key: VALIDATION_ABSOLUTE_TOLERANCE

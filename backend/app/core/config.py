@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     
     # Security & API
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.6-flash"
     
     # Database
     DATABASE_URL: str = "sqlite:///./financial_docs.db"
