@@ -22,3 +22,44 @@ def test_cash_flow_failing():
     checks = validate_cash_flow(doc)
     failed = [c for c in checks if c.status == "FAIL"]
     assert len(failed) >= 1
+
+
+def test_cash_flow_table_recovery_and_multi_period():
+    from app.services.groq_service import normalize_extraction_json
+    from app.validation.engine import run_financial_validation
+
+    # Raw payload mimicking Cash Flow table output returned under tables array
+    raw_llm_data = {
+        "document_type": "cash_flow",
+        "fields": [],
+        "tables": [
+            {
+                "name": "Consolidated Cash Flow Statement",
+                "headers": ["Particulars", "Year Ended March 31, 2026", "Year Ended March 31, 2025"],
+                "rows": [
+                    ["Net cash flow from operating activities", "150,000.00", "120,000.00"],
+                    ["Net cash flow from investing activities", "-50,000.00", "-40,000.00"],
+                    ["Net cash flow from financing activities", "-30,000.00", "-20,000.00"],
+                    ["Net increase in cash and cash equivalents", "70,000.00", "60,000.00"],
+                    ["Cash and cash equivalents at beginning of year", "100,000.00", "40,000.00"],
+                    ["Cash and cash equivalents at end of year", "170,000.00", "100,000.00"]
+                ]
+            }
+        ]
+    }
+
+    extraction = normalize_extraction_json(raw_llm_data, "cash_flow", [])
+
+    # 1. Verify fields recovered and canonical aliases mapped
+    f_map = {f.name: f for f in extraction.fields}
+    assert "operating_cash_flow" in f_map
+    assert f_map["operating_cash_flow"].normalized_value == 150000.0
+    assert "net_change_in_cash" in f_map
+    assert f_map["net_change_in_cash"].normalized_value == 70000.0
+
+    # 2. Verify deterministic validation passes
+    summary = run_financial_validation(extraction)
+    assert summary.overall_status == "PASS"
+    assert summary.passed_count >= 1
+    assert summary.failed_count == 0
+

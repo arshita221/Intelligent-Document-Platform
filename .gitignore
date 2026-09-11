@@ -35,3 +35,25 @@ temp/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Dataset & Evaluation Artifacts (Local Only)
+New Dataset/
+dataset/
+data/
+dataset_manifest.json
+eval_results/
+
+# Scratch diagnostic scripts and test outputs
+diagnostic_dump.py
+diagnostic_output*.txt
+inspect_db_matrix.py
+run_live_matrix.py
+run_fallback_verification.py
+live_*_results.json
+samples/audit_top4_records.py
+samples/controlled_eval_workflow.py
+samples/inspect_and_manifest_dataset.py
+samples/inspect_dataset.py
+samples/test_dataset_representative.py
+
+

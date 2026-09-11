@@ -47,28 +47,38 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
                 details="Missing one or more required fields (quantity, unit_price, line_total)."
             ))
 
+    def _first_not_none(*vals):
+        for v in vals:
+            if v is not None:
+                return v
+        return None
+
     # Check B: Sum of line totals = subtotal / total
-    line_totals = [item.total or item.amount for item in extraction.line_items if (item.total or item.amount) is not None]
-    subtotal = field_map.get("subtotal") or field_map.get("sub_total")
-    total_amount = field_map.get("total") or field_map.get("total_amount") or field_map.get("total amount")
-    tax = field_map.get("tax") or field_map.get("tax_amount") or field_map.get("tax (10% gst)")
-    amount_paid = field_map.get("amount_paid") or field_map.get("amount paid")
-    amount_due = field_map.get("amount_due") or field_map.get("amount due")
+    line_totals = [item.total if item.total is not None else item.amount for item in extraction.line_items if (item.total is not None or item.amount is not None)]
+    subtotal = _first_not_none(field_map.get("subtotal"), field_map.get("sub_total"), field_map.get("sub total"), field_map.get("taxable_amount"))
+    total_amount = _first_not_none(field_map.get("total"), field_map.get("total_amount"), field_map.get("total amount"), field_map.get("grand_total"))
+    tax = _first_not_none(field_map.get("tax"), field_map.get("tax_amount"), field_map.get("tax (10% gst)"))
+    amount_paid = _first_not_none(field_map.get("amount_paid"), field_map.get("amount paid"))
+    amount_due = _first_not_none(field_map.get("amount_due"), field_map.get("amount due"))
+
+    # If subtotal is missing but total is present and tax is null/0, subtotal equals total
+    effective_subtotal = subtotal if subtotal is not None else (total_amount if (tax is None or tax == 0.0) else None)
+
     
     check_name_b = "Sum of Line Items ≈ Subtotal"
     formula_b = "sum(line_totals) ≈ subtotal"
-    operands_b = {"sum_line_items": sum(line_totals) if line_totals else None, "subtotal": subtotal}
+    operands_b = {"sum_line_items": float(sum(Decimal(str(v)) for v in line_totals)) if line_totals else None, "subtotal": effective_subtotal}
     
-    if line_totals and subtotal is not None:
+    if line_totals and effective_subtotal is not None:
         calc_subtotal = float(sum(Decimal(str(v)) for v in line_totals))
-        variance_b = abs(calc_subtotal - subtotal)
+        variance_b = abs(calc_subtotal - effective_subtotal)
         status_b = "PASS" if variance_b <= abs_tol else "FAIL"
         checks.append(ValidationCheck(
             check_name=check_name_b,
             formula=formula_b,
             operands=operands_b,
             calculated_value=calc_subtotal,
-            reported_value=subtotal,
+            reported_value=effective_subtotal,
             variance=variance_b,
             tolerance=abs_tol,
             status=status_b
@@ -86,10 +96,16 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
     # Check C: Subtotal + Tax = Total
     check_name_c = "Subtotal + Tax ≈ Total"
     formula_c = "subtotal + tax ≈ total"
-    operands_c = {"subtotal": subtotal, "tax": tax, "total": total_amount}
     
-    if subtotal is not None and tax is not None and total_amount is not None:
-        calc_total = float(Decimal(str(subtotal)) + Decimal(str(tax)))
+    # Handle tax-free invoices: if subtotal equals total and tax is not specified, effective tax is 0.0
+    effective_tax = tax
+    if subtotal is not None and total_amount is not None and tax is None and abs(subtotal - total_amount) <= abs_tol:
+        effective_tax = 0.0
+
+    operands_c = {"subtotal": subtotal, "tax": effective_tax, "total": total_amount}
+    
+    if subtotal is not None and effective_tax is not None and total_amount is not None:
+        calc_total = float(Decimal(str(subtotal)) + Decimal(str(effective_tax)))
         variance_c = abs(calc_total - total_amount)
         status_c = "PASS" if variance_c <= abs_tol else "FAIL"
         checks.append(ValidationCheck(
@@ -142,3 +158,4 @@ def validate_invoice(extraction: DocumentExtraction) -> List[ValidationCheck]:
         ))
 
     return checks
+

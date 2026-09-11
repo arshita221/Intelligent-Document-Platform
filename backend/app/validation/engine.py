@@ -31,8 +31,23 @@ def run_financial_validation(extraction: DocumentExtraction) -> ValidationSummar
     failed_count = sum(1 for c in checks if c.status == "FAIL")
     na_count = sum(1 for c in checks if c.status == "NOT_APPLICABLE")
 
-    # Financial checks overall status: FAILED only if failed_count > 0
-    overall_status = "FAILED" if failed_count > 0 else "PASS"
+    # Financial checks overall status logic:
+    # FAILED if any check failed, PASS if at least one passed with 0 failures, INCOMPLETE if all checks N/A
+    if failed_count > 0:
+        overall_status = "FAILED"
+    elif passed_count > 0:
+        overall_status = "PASS"
+    else:
+        overall_status = "INCOMPLETE"
+        # If no checks could be evaluated, append an informative summary check
+        checks.append(ValidationCheck(
+            check_name="[Summary] Deterministic Financial Math Verification",
+            formula="N/A",
+            operands={},
+            status="NOT_APPLICABLE",
+            details="Financial totals were unavailable in extracted data for deterministic math verification."
+        ))
+        na_count += 1
 
     return ValidationSummary(
         overall_status=overall_status,
@@ -41,3 +56,4 @@ def run_financial_validation(extraction: DocumentExtraction) -> ValidationSummar
         not_applicable_count=na_count,
         checks=checks
     )
+

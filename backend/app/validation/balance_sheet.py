@@ -32,26 +32,21 @@ def validate_balance_sheet(extraction: DocumentExtraction) -> List[ValidationChe
         curr_liab = field_map.get("current_liabilities")
         non_curr_liab = field_map.get("non_current_liabilities")
 
-        # 1. Fundamental Accounting Equation: Capital + Liabilities ≈ Total Assets / Capital & Liabilities
+        # 1. Fundamental Accounting Equation: Capital & Equity + Liabilities ≈ Total Assets
         check_name_1 = f"[{label}] Capital & Equity + Liabilities ≈ Total Assets"
         formula_1 = "capital_and_equity + liabilities ≈ assets"
-        operands_1 = {"capital_or_equity": capital, "liabilities": liabilities, "assets": assets or cap_liab}
+        operands_1 = {"capital_or_equity": capital, "liabilities": liabilities, "assets": assets}
 
-        if (capital is not None or cap_liab is not None) and liabilities is not None and (assets is not None or cap_liab is not None):
-            rep_assets = assets if assets is not None else cap_liab
-            if capital is not None:
-                calc_val = float(Decimal(str(capital)) + Decimal(str(liabilities)))
-            else:
-                calc_val = cap_liab
-            
-            variance = abs(calc_val - rep_assets)
+        if capital is not None and liabilities is not None and assets is not None:
+            calc_val = float(Decimal(str(capital)) + Decimal(str(liabilities)))
+            variance = abs(calc_val - assets)
             status = "PASS" if variance <= abs_tol else "FAIL"
             checks.append(ValidationCheck(
                 check_name=check_name_1,
                 formula=formula_1,
                 operands=operands_1,
                 calculated_value=calc_val,
-                reported_value=rep_assets,
+                reported_value=assets,
                 variance=variance,
                 tolerance=abs_tol,
                 status=status,

@@ -7,7 +7,7 @@ from app.utils.file_validation import validate_uploaded_file
 from app.utils.helpers import generate_document_name
 from app.extraction.pdf_processor import process_pdf_document
 from app.extraction.image_processor import process_image_document
-from app.services.groq_service import extract_with_groq
+from app.services.groq_service import extract_with_groq, should_trigger_fallback, perform_fallback_extraction, merge_extractions
 from app.validation.engine import run_financial_validation
 from app.services import persistence_service
 from app.schemas.documents import DocumentResponse, FileValidationResult, ProcessingMetadata
@@ -176,11 +176,39 @@ def process_document_pipeline(
         )
         return resp, 500
 
-    # 5 & 6. Layer: Deterministic Financial Validation
+    # 5. Layer: Fallback Extraction for Incomplete Scanned Documents
+    # Check if primary extraction lacks financial rows/totals and perform ONE targeted fallback
+    try:
+        if should_trigger_fallback(extraction_data, doc_type_clean):
+            logger.info(f"Fallback triggered for '{original_filename}' ({doc_type_clean}): insufficient financial rows detected.")
+            fallback_data = perform_fallback_extraction(
+                document_type=doc_type_clean,
+                raw_text_pages=raw_text_pages,
+                page_images=page_images,
+                is_scanned=is_scanned
+            )
+            extraction_data = merge_extractions(extraction_data, fallback_data)
+            logger.info(f"Fallback merge complete for '{original_filename}'. Fields: {len(extraction_data.fields)}, Line items: {len(extraction_data.line_items)}, Periods: {len(extraction_data.periods)}")
+        else:
+            logger.info(f"Fallback NOT needed for '{original_filename}' ({doc_type_clean}): sufficient financial data extracted.")
+    except Exception as fb_exc:
+        logger.warning(f"Fallback extraction failed for '{original_filename}': {fb_exc}. Proceeding with primary extraction only.")
+
+    # 6 & 7. Layer: Deterministic Financial Validation
     validation_summary = run_financial_validation(extraction_data)
 
-    # Overall processing status
-    overall_status = "PASS" if (val_result.is_valid and validation_summary.overall_status == "PASS") else "FAILED"
+    # Overall processing status logic
+    if not val_result.is_valid:
+        overall_status = "FAILED"
+        error_msg = "; ".join(val_result.errors)
+    else:
+        overall_status = validation_summary.overall_status
+        if overall_status == "PASS":
+            error_msg = None
+        elif overall_status == "INCOMPLETE":
+            error_msg = "Financial totals were unavailable for deterministic math verification."
+        else:
+            error_msg = "Financial validation failed."
 
     proc_metadata = ProcessingMetadata(
         processing_time_seconds=round(time.time() - start_time, 3),
@@ -203,7 +231,7 @@ def process_document_pipeline(
         extracted_data=extraction_data,
         validation_results=validation_summary,
         processing_metadata=proc_metadata,
-        error_message=None if overall_status == "PASS" else "Financial validation failed."
+        error_message=error_msg
     )
 
     resp = DocumentResponse(
@@ -222,5 +250,6 @@ def process_document_pipeline(
         processing_metadata=proc_metadata,
         error_message=saved_doc.error_message
     )
+
 
     return resp, 200

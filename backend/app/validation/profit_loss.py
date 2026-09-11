@@ -18,22 +18,30 @@ def validate_profit_loss(extraction: DocumentExtraction) -> List[ValidationCheck
         period_buckets.append(("General", top_map))
 
     for label, field_map in period_buckets:
-        # Income components
-        revenue = field_map.get("revenue") or field_map.get("sales") or field_map.get("interest_earned")
-        other_income = field_map.get("other_income")
+        # Income components (support canonical primary_income as interest_earned / revenue)
+        revenue = (
+            field_map.get("primary_income") or 
+            field_map.get("interest_earned") or 
+            field_map.get("revenue") or 
+            field_map.get("revenue_from_operations") or 
+            field_map.get("operating_revenue") or 
+            field_map.get("sales") or 
+            field_map.get("interest_income")
+        )
+        other_income = field_map.get("other_income") or field_map.get("other_operating_income")
         total_income = field_map.get("total_income")
 
         # Expense components
-        interest_exp = field_map.get("interest_expended")
-        op_expenses = field_map.get("operating_expenses") or field_map.get("expenses")
-        provisions = field_map.get("provisions_and_contingencies") or field_map.get("provisions")
+        interest_exp = field_map.get("interest_expended") or field_map.get("interest_expense") or field_map.get("finance_costs")
+        op_expenses = field_map.get("operating_expenses") or field_map.get("operating_expense") or field_map.get("expenses") or field_map.get("other_expenses")
+        provisions = field_map.get("provisions_and_contingencies") or field_map.get("provisions") or field_map.get("depreciation_and_amortization")
         total_expenditure = field_map.get("total_expenditure") or field_map.get("total_expenses")
 
         # Profit components
-        profit_before_tax = field_map.get("profit_before_tax")
-        tax = field_map.get("tax")
+        profit_before_tax = field_map.get("profit_before_tax") or field_map.get("pbt")
+        tax = field_map.get("tax") or field_map.get("tax_expense") or field_map.get("provision_for_tax")
         minority_interest = field_map.get("minority_interest") or 0.0
-        net_profit = field_map.get("net_profit") or field_map.get("consolidated_net_profit_before_minority_interest")
+        net_profit = field_map.get("net_profit") or field_map.get("profit_after_tax") or field_map.get("pat") or field_map.get("consolidated_net_profit_before_minority_interest")
 
         # Check 1: Revenue/Interest Earned + Other Income ≈ Total Income
         check_name_1 = f"[{label}] Primary Income + Other Income ≈ Total Income"

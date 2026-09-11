@@ -14,9 +14,12 @@ class LineItem(BaseModel):
     description: Optional[str] = None
     quantity: Optional[float] = None
     unit_price: Optional[float] = None
-    amount: Optional[float] = None
+    discount: Optional[float] = None
     tax: Optional[float] = None
+    taxable_amount: Optional[float] = None
+    amount: Optional[float] = None
     total: Optional[float] = None
+    raw_data: Optional[Dict[str, Any]] = None
     evidence: Optional[str] = None
     page_number: Optional[int] = 1
 

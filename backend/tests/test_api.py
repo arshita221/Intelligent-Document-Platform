@@ -75,3 +75,52 @@ def test_process_document_success(mock_extract, mock_invoice_passing):
     assert get_res.status_code == 200
     get_data = get_res.json()
     assert get_data["document_name"] == doc_name
+
+@patch("app.services.document_service.extract_with_groq")
+def test_live_pipeline_non_monetary_normalization_and_incomplete_status(mock_extract):
+    from app.schemas.extraction import DocumentExtraction, ExtractedField
+    
+    # Mock extraction matching real 20251118_000612.jpg header fields with missing summary totals
+    mock_extract.return_value = DocumentExtraction(
+        document_type="invoice",
+        fields=[
+            ExtractedField(name="invoice no", value="SCI/25-26/13331"),
+            ExtractedField(name="dated", value="16-Jul-25"),
+            ExtractedField(name="sales man", value="SUJIT(9007785327)")
+        ],
+        line_items=[]
+    )
+
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Invoice SCI/25-26/13331 Dated 16-Jul-25 Sales Man SUJIT(9007785327)")
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    response = client.post(
+        "/api/v1/documents/process",
+        data={"document_type": "invoice"},
+        files={"file": ("20251118_000612.pdf", pdf_bytes, "application/pdf")}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    
+    # 1. Verify non-monetary fields are NOT converted to numbers
+    fields_by_name = {f["name"]: f for f in data["extracted_data"]["fields"]}
+    assert fields_by_name["invoice no"]["normalized_value"] is None
+    assert fields_by_name["dated"]["normalized_value"] is None
+    assert fields_by_name["sales man"]["normalized_value"] is None
+
+    # 2. Verify all-NOT_APPLICABLE checks return INCOMPLETE (NOT PASS)
+    assert data["validation"]["overall_status"] == "INCOMPLETE"
+    assert data["processing_status"] == "INCOMPLETE"
+
+    # 3. Verify database retrieval endpoint returns INCOMPLETE status
+    doc_name = data["document_name"]
+    get_res = client.get(f"/api/v1/documents/{doc_name}")
+    assert get_res.status_code == 200
+    get_data = get_res.json()
+    assert get_data["processing_status"] == "INCOMPLETE"
+    assert get_data["validation"]["overall_status"] == "INCOMPLETE"
+

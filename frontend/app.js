@@ -88,7 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             documentsTableBody.innerHTML = data.documents.map(doc => {
-                const statusBadgeClass = doc.processing_status === 'PASS' ? 'badge-pass' : 'badge-fail';
+                let statusBadgeClass = 'badge-pass';
+                if (doc.processing_status === 'FAILED') statusBadgeClass = 'badge-fail';
+                if (doc.processing_status === 'INCOMPLETE') statusBadgeClass = 'badge-na';
                 const dateStr = new Date(doc.uploaded_at).toLocaleString();
 
                 return `
@@ -141,7 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-doc-name').textContent = data.original_filename;
         const statusBadge = document.getElementById('modal-status-badge');
         statusBadge.textContent = data.processing_status;
-        statusBadge.className = `badge ${data.processing_status === 'PASS' ? 'badge-pass' : 'badge-fail'}`;
+        let badgeClass = 'badge-pass';
+        if (data.processing_status === 'FAILED') badgeClass = 'badge-fail';
+        if (data.processing_status === 'INCOMPLETE') badgeClass = 'badge-na';
+        statusBadge.className = `badge ${badgeClass}`;
+
 
         // Summary Tab
         document.getElementById('detail-filename').textContent = data.original_filename;
@@ -214,11 +220,59 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
         }
 
-        // Extracted Fields Tab
+        // Extracted Fields / Financial Statement Tab
         const fieldsContainer = document.getElementById('fields-container');
         const fields = data.extracted_data.fields || [];
+        const periods = data.extracted_data.periods || [];
+        const docType = (data.document_type || data.extracted_data.document_type || '').toLowerCase();
 
-        if (fields.length === 0) {
+        if (periods.length > 0) {
+            let periodHeaders = periods.map(p => `<th>${escapeHtml(p.label)}</th>`).join('');
+            let fieldNamesSet = new Set();
+            periods.forEach(p => (p.fields || []).forEach(f => fieldNamesSet.add(f.name)));
+            let allFieldNames = Array.from(fieldNamesSet);
+
+            let periodTableHtml = `
+                <h4 style="margin-bottom:12px;">Multi-Period Financial Statement</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Financial Row Label</th>
+                            ${periodHeaders}
+                            <th>Evidence</th>
+                            <th>Page</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allFieldNames.map(fieldName => {
+                            let firstFieldWithEvidence = null;
+                            let cells = periods.map(p => {
+                                let f = (p.fields || []).find(x => x.name.toLowerCase() === fieldName.toLowerCase());
+                                if (f && f.evidence && !firstFieldWithEvidence) firstFieldWithEvidence = f;
+                                if (!f || (f.value === null && f.normalized_value === null)) {
+                                    return '<td style="background-color:rgba(239, 68, 68, 0.08); color:var(--text-muted);"><em style="color:var(--text-muted)">null</em></td>';
+                                }
+                                let valStr = f.normalized_value !== null ? f.normalized_value : (f.value !== null ? escapeHtml(String(f.value)) : '-');
+                                return `<td><strong>${valStr}</strong></td>`;
+                            }).join('');
+
+                            let ev = firstFieldWithEvidence ? firstFieldWithEvidence.evidence : '-';
+                            let page = firstFieldWithEvidence ? firstFieldWithEvidence.page_number : 1;
+
+                            return `
+                                <tr>
+                                    <td><strong>${escapeHtml(fieldName)}</strong></td>
+                                    ${cells}
+                                    <td><small style="color:var(--text-secondary)">${escapeHtml(ev || '-')}</small></td>
+                                    <td>${page || 1}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            fieldsContainer.innerHTML = periodTableHtml;
+        } else if (fields.length === 0) {
             fieldsContainer.innerHTML = '<p class="empty-state">No key-value fields extracted.</p>';
         } else {
             fieldsContainer.innerHTML = `
@@ -237,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <tr>
                                 <td><strong>${escapeHtml(f.name)}</strong></td>
                                 <td>${f.value !== null ? escapeHtml(String(f.value)) : '<em style="color:var(--text-muted)">null</em>'}</td>
-                                <td>${f.normalized_value !== null ? f.normalized_value : '-'}</td>
+                                <td>${f.normalized_value !== null ? f.normalized_value : '<span style="color:var(--text-muted)">null</span>'}</td>
                                 <td><small style="color:var(--text-secondary)">${escapeHtml(f.evidence || '-')}</small></td>
                                 <td>${f.page_number || 1}</td>
                             </tr>
@@ -250,10 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Line Items & Tables Tab
         const lineItemsContainer = document.getElementById('lineitems-container');
         const lineItems = data.extracted_data.line_items || [];
+        const tables = data.extracted_data.tables || [];
 
         let lineItemsHtml = '<h4>Line Items</h4>';
         if (lineItems.length === 0) {
-            lineItemsHtml += '<p class="empty-state">No line items extracted.</p>';
+            if (docType === 'balance_sheet' || docType === 'profit_loss' || docType === 'cash_flow') {
+                lineItemsHtml += '<p class="empty-state">Financial rows for ' + escapeHtml(docType.replace('_', ' ')) + ' are displayed under Extracted Fields / Financial Statement tab.</p>';
+            } else {
+                lineItemsHtml += '<p class="empty-state">No line items extracted.</p>';
+            }
         } else {
             lineItemsHtml += `
                 <table class="data-table">
@@ -262,25 +321,51 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>Description</th>
                             <th>Qty</th>
                             <th>Unit Price</th>
-                            <th>Amount</th>
+                            <th>Taxable Amount</th>
+                            <th>Discount</th>
                             <th>Tax</th>
                             <th>Total</th>
+                            <th>Evidence</th>
+                            <th>Page</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${lineItems.map(li => `
                             <tr>
-                                <td>${escapeHtml(li.description || '-')}</td>
-                                <td>${li.quantity !== null ? li.quantity : '-'}</td>
-                                <td>${li.unit_price !== null ? li.unit_price : '-'}</td>
-                                <td>${li.amount !== null ? li.amount : '-'}</td>
-                                <td>${li.tax !== null ? li.tax : '-'}</td>
-                                <td><strong>${li.total !== null ? li.total : '-'}</strong></td>
+                                <td>${escapeHtml(li.description || (li.raw_data ? JSON.stringify(li.raw_data) : '-'))}</td>
+                                <td>${li.quantity !== null && li.quantity !== undefined ? li.quantity : '-'}</td>
+                                <td>${li.unit_price !== null && li.unit_price !== undefined ? li.unit_price : '-'}</td>
+                                <td>${li.taxable_amount !== null && li.taxable_amount !== undefined ? li.taxable_amount : (li.amount !== null && li.amount !== undefined ? li.amount : '-')}</td>
+                                <td>${li.discount !== null && li.discount !== undefined ? li.discount : '-'}</td>
+                                <td>${li.tax !== null && li.tax !== undefined ? li.tax : '-'}</td>
+                                <td><strong>${li.total !== null && li.total !== undefined ? li.total : '-'}</strong></td>
+                                <td><small style="color:var(--text-secondary)">${escapeHtml(li.evidence || '-')}</small></td>
+                                <td>${li.page_number || 1}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             `;
+        }
+
+        if (tables.length > 0) {
+            lineItemsHtml += '<h4 style="margin-top:24px;">Extracted Document Tables</h4>';
+            tables.forEach((t, idx) => {
+                lineItemsHtml += `<h5 style="margin-top:12px; font-weight:600;">${escapeHtml(t.name || 'Table ' + (idx + 1))} (Page ${t.page_number || 1})</h5>`;
+                lineItemsHtml += '<table class="data-table"><thead><tr>';
+                (t.headers || []).forEach(h => {
+                    lineItemsHtml += `<th>${escapeHtml(h)}</th>`;
+                });
+                lineItemsHtml += '</tr></thead><tbody>';
+                (t.rows || []).forEach(row => {
+                    lineItemsHtml += '<tr>';
+                    (row || []).forEach(cell => {
+                        lineItemsHtml += `<td>${cell !== null && cell !== undefined ? escapeHtml(String(cell)) : '-'}</td>`;
+                    });
+                    lineItemsHtml += '</tr>';
+                });
+                lineItemsHtml += '</tbody></table>';
+            });
         }
 
         lineItemsContainer.innerHTML = lineItemsHtml;
