@@ -1,0 +1,257 @@
+{
+  "id": "e2b3c4d5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+  "document_name": "sample_balance_sheet_20241231_120000_b2c3d4e5",
+  "document_type": "balance_sheet",
+  "original_filename": "sample_balance_sheet.pdf",
+  "file_type": "application/pdf",
+  "page_count": 1,
+  "processing_status": "PASS",
+  "uploaded_at": "2025-01-15T12:01:00",
+  "processed_at": "2025-01-15T12:01:03",
+  "file_validation": {
+    "is_valid": true,
+    "file_exists": true,
+    "is_not_empty": true,
+    "supported_extension": true,
+    "signature_valid": true,
+    "page_count": 1,
+    "page_count_valid": true,
+    "decodable": true,
+    "readable": true,
+    "file_size_bytes": 1119,
+    "detected_mime": "application/pdf",
+    "errors": []
+  },
+  "extracted_data": {
+    "document_type": "balance_sheet",
+    "fields": [
+      {
+        "name": "current_assets",
+        "value": "$500,000",
+        "normalized_value": 500000.0,
+        "evidence": "Current Assets:               $500,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "non_current_assets",
+        "value": "$300,000",
+        "normalized_value": 300000.0,
+        "evidence": "Non-Current Assets:           $300,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "assets",
+        "value": "$800,000",
+        "normalized_value": 800000.0,
+        "evidence": "Total Assets:                 $800,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "capital",
+        "value": "$500,000",
+        "normalized_value": 500000.0,
+        "evidence": "Capital / Shareholder Equity:  $500,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "current_liabilities",
+        "value": "$200,000",
+        "normalized_value": 200000.0,
+        "evidence": "Current Liabilities:          $200,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "non_current_liabilities",
+        "value": "$100,000",
+        "normalized_value": 100000.0,
+        "evidence": "Non-Current Liabilities:      $100,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "liabilities",
+        "value": "$300,000",
+        "normalized_value": 300000.0,
+        "evidence": "Total Liabilities:            $300,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "total_capital_and_liabilities",
+        "value": "$800,000",
+        "normalized_value": 800000.0,
+        "evidence": "Total Capital & Liabilities:  $800,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      }
+    ],
+    "line_items": [],
+    "tables": [],
+    "periods": [
+      {
+        "label": "2024",
+        "fields": [
+          {
+            "name": "current_assets",
+            "value": "$500,000",
+            "normalized_value": 500000.0,
+            "evidence": "Current Assets:               $500,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "non_current_assets",
+            "value": "$300,000",
+            "normalized_value": 300000.0,
+            "evidence": "Non-Current Assets:           $300,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "assets",
+            "value": "$800,000",
+            "normalized_value": 800000.0,
+            "evidence": "Total Assets:                 $800,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "capital",
+            "value": "$500,000",
+            "normalized_value": 500000.0,
+            "evidence": "Capital / Shareholder Equity:  $500,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "current_liabilities",
+            "value": "$200,000",
+            "normalized_value": 200000.0,
+            "evidence": "Current Liabilities:          $200,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "non_current_liabilities",
+            "value": "$100,000",
+            "normalized_value": 100000.0,
+            "evidence": "Non-Current Liabilities:      $100,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "liabilities",
+            "value": "$300,000",
+            "normalized_value": 300000.0,
+            "evidence": "Total Liabilities:            $300,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "total_capital_and_liabilities",
+            "value": "$800,000",
+            "normalized_value": 800000.0,
+            "evidence": "Total Capital & Liabilities:  $800,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          }
+        ]
+      }
+    ],
+    "notes": [],
+    "raw_text_by_page": [
+      {
+        "page_number": 1,
+        "text": "NEXUS TECH SOLUTIONS - BALANCE SHEET\n    As of December 31, 2024 (Amount in USD)\n\n    PERIOD: 2024\n\n    ASSETS:\n    Current Assets:               $500,000\n    Non-Current Assets:           $300,000\n    ----------------------------------------\n    Total Assets:                 $800,000\n\n    CAPITAL & LIABILITIES:\n    Capital / Shareholder Equity:  $500,000\n    Current Liabilities:          $200,000\n    Non-Current Liabilities:      $100,000\n    ----------------------------------------\n    Total Liabilities:            $300,000\n    Total Capital & Liabilities:  $800,000"
+      }
+    ],
+    "metadata": {
+      "normalized": true
+    }
+  },
+  "validation": {
+    "overall_status": "PASS",
+    "passed_count": 3,
+    "failed_count": 0,
+    "not_applicable_count": 0,
+    "checks": [
+      {
+        "check_name": "[2024] Capital & Equity + Liabilities \u2248 Total Assets",
+        "formula": "capital_and_equity + liabilities \u2248 assets",
+        "operands": {
+          "capital_or_equity": 500000.0,
+          "liabilities": 300000.0,
+          "assets": 800000.0
+        },
+        "calculated_value": 800000.0,
+        "reported_value": 800000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      },
+      {
+        "check_name": "[2024] Current Assets + Non-Current Assets \u2248 Total Assets",
+        "formula": "current_assets + non_current_assets \u2248 total_assets",
+        "operands": {
+          "current_assets": 500000.0,
+          "non_current_assets": 300000.0,
+          "total_assets": 800000.0
+        },
+        "calculated_value": 800000.0,
+        "reported_value": 800000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      },
+      {
+        "check_name": "[2024] Current Liabilities + Non-Current Liabilities \u2248 Total Liabilities",
+        "formula": "current_liabilities + non_current_liabilities \u2248 total_liabilities",
+        "operands": {
+          "current_liabilities": 200000.0,
+          "non_current_liabilities": 100000.0,
+          "total_liabilities": 300000.0
+        },
+        "calculated_value": 300000.0,
+        "reported_value": 300000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      }
+    ]
+  },
+  "processing_metadata": {
+    "processing_time_seconds": 2.45,
+    "timestamp": "2025-01-15T12:01:03Z",
+    "extractor_used": "qwen/qwen3.8-27b",
+    "pages_processed": 1,
+    "environment": "production"
+  },
+  "error_message": null
+}

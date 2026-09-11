@@ -1,0 +1,207 @@
+{
+  "id": "a4d5e6f7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+  "document_name": "sample_cash_flow_20241231_120000_d4e5f6a7",
+  "document_type": "cash_flow",
+  "original_filename": "sample_cash_flow.pdf",
+  "file_type": "application/pdf",
+  "page_count": 1,
+  "processing_status": "PASS",
+  "uploaded_at": "2025-01-15T12:03:00",
+  "processed_at": "2025-01-15T12:03:02",
+  "file_validation": {
+    "is_valid": true,
+    "file_exists": true,
+    "is_not_empty": true,
+    "supported_extension": true,
+    "signature_valid": true,
+    "page_count": 1,
+    "page_count_valid": true,
+    "decodable": true,
+    "readable": true,
+    "file_size_bytes": 1190,
+    "detected_mime": "application/pdf",
+    "errors": []
+  },
+  "extracted_data": {
+    "document_type": "cash_flow",
+    "fields": [
+      {
+        "name": "operating_cash_flow",
+        "value": "$50,000",
+        "normalized_value": 50000.0,
+        "evidence": "Operating Cash Flow:                       $50,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "investing_cash_flow",
+        "value": "(20,000)",
+        "normalized_value": -20000.0,
+        "evidence": "Investing Cash Flow (Equipment Purchase):  (20,000)",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "financing_cash_flow",
+        "value": "(10,000)",
+        "normalized_value": -10000.0,
+        "evidence": "Financing Cash Flow (Debt Repayment):      (10,000)",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "net_increase",
+        "value": "$20,000",
+        "normalized_value": 20000.0,
+        "evidence": "Net Increase in Cash:                      $20,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "opening_cash",
+        "value": "$15,000",
+        "normalized_value": 15000.0,
+        "evidence": "Opening Cash Balance:                      $15,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "closing_cash",
+        "value": "$35,000",
+        "normalized_value": 35000.0,
+        "evidence": "Closing Cash Balance:                      $35,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      }
+    ],
+    "line_items": [],
+    "tables": [],
+    "periods": [
+      {
+        "label": "2024",
+        "fields": [
+          {
+            "name": "operating_cash_flow",
+            "value": "$50,000",
+            "normalized_value": 50000.0,
+            "evidence": "Operating Cash Flow:                       $50,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "investing_cash_flow",
+            "value": "(20,000)",
+            "normalized_value": -20000.0,
+            "evidence": "Investing Cash Flow (Equipment Purchase):  (20,000)",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "financing_cash_flow",
+            "value": "(10,000)",
+            "normalized_value": -10000.0,
+            "evidence": "Financing Cash Flow (Debt Repayment):      (10,000)",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "net_increase",
+            "value": "$20,000",
+            "normalized_value": 20000.0,
+            "evidence": "Net Increase in Cash:                      $20,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "opening_cash",
+            "value": "$15,000",
+            "normalized_value": 15000.0,
+            "evidence": "Opening Cash Balance:                      $15,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "closing_cash",
+            "value": "$35,000",
+            "normalized_value": 35000.0,
+            "evidence": "Closing Cash Balance:                      $35,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          }
+        ]
+      }
+    ],
+    "notes": [],
+    "raw_text_by_page": [
+      {
+        "page_number": 1,
+        "text": "HORIZON VENTURES - STATEMENT OF CASH FLOWS\n    For Year Ended December 31, 2024\n\n    PERIOD: 2024\n\n    CASH FLOW FROM ACTIVITIES:\n    Operating Cash Flow:                       $50,000\n    Investing Cash Flow (Equipment Purchase):  (20,000)\n    Financing Cash Flow (Debt Repayment):      (10,000)\n    Foreign Exchange Effect:                    $0\n    ---------------------------------------------------\n    Net Increase in Cash:                      $20,000\n\n    CASH RECONCILIATION:\n    Opening Cash Balance:                      $15,000\n    Net Increase:                              $20,000\n    Adjustments:                                $0\n    ---------------------------------------------------\n    Closing Cash Balance:                      $35,000"
+      }
+    ],
+    "metadata": {
+      "normalized": true
+    }
+  },
+  "validation": {
+    "overall_status": "PASS",
+    "passed_count": 2,
+    "failed_count": 0,
+    "not_applicable_count": 0,
+    "checks": [
+      {
+        "check_name": "[2024] Operating + Investing + Financing Cash Flows \u2248 Net Increase",
+        "formula": "operating + investing + financing + fx_effect \u2248 net_increase",
+        "operands": {
+          "operating_cash": 50000.0,
+          "investing_cash": -20000.0,
+          "financing_cash": -10000.0,
+          "net_increase": 20000.0
+        },
+        "calculated_value": 20000.0,
+        "reported_value": 20000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      },
+      {
+        "check_name": "[2024] Opening Cash + Net Increase + Adjustments \u2248 Closing Cash",
+        "formula": "opening_cash + net_increase + adjustments \u2248 closing_cash",
+        "operands": {
+          "opening_cash": 15000.0,
+          "net_increase": 20000.0,
+          "adjustments": 0.0,
+          "closing_cash": 35000.0
+        },
+        "calculated_value": 35000.0,
+        "reported_value": 35000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      }
+    ]
+  },
+  "processing_metadata": {
+    "processing_time_seconds": 2.05,
+    "timestamp": "2025-01-15T12:03:02Z",
+    "extractor_used": "qwen/qwen3.8-27b",
+    "pages_processed": 1,
+    "environment": "production"
+  },
+  "error_message": null
+}

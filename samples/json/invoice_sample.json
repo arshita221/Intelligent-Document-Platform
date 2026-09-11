@@ -1,0 +1,293 @@
+{
+  "id": "d1a2b3c4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+  "document_name": "sample_invoice_20250115_120000_a1b2c3d4",
+  "document_type": "invoice",
+  "original_filename": "sample_invoice.pdf",
+  "file_type": "application/pdf",
+  "page_count": 1,
+  "processing_status": "PASS",
+  "uploaded_at": "2025-01-15T12:00:00",
+  "processed_at": "2025-01-15T12:00:02",
+  "file_validation": {
+    "is_valid": true,
+    "file_exists": true,
+    "is_not_empty": true,
+    "supported_extension": true,
+    "signature_valid": true,
+    "page_count": 1,
+    "page_count_valid": true,
+    "decodable": true,
+    "readable": true,
+    "file_size_bytes": 1283,
+    "detected_mime": "application/pdf",
+    "errors": []
+  },
+  "extracted_data": {
+    "document_type": "invoice",
+    "fields": [
+      {
+        "name": "invoice_number",
+        "value": "INV-2025-8899",
+        "normalized_value": null,
+        "evidence": "Invoice Number: INV-2025-8899",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "invoice_date",
+        "value": "2025-01-15",
+        "normalized_value": null,
+        "evidence": "Date: 2025-01-15",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "due_date",
+        "value": "2025-02-15",
+        "normalized_value": null,
+        "evidence": "Due Date: 2025-02-15",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "seller_name",
+        "value": "Acme Corp, 100 Innovation Way, Tech City",
+        "normalized_value": null,
+        "evidence": "Seller: Acme Corp, 100 Innovation Way, Tech City",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "buyer_name",
+        "value": "Global Logistics Inc, 500 Freight Road",
+        "normalized_value": null,
+        "evidence": "Buyer: Global Logistics Inc, 500 Freight Road",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "currency",
+        "value": "USD",
+        "normalized_value": null,
+        "evidence": "Currency: USD",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "subtotal",
+        "value": "$1,500.00",
+        "normalized_value": 1500.0,
+        "evidence": "Subtotal:                   $1,500.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "tax",
+        "value": "$150.00",
+        "normalized_value": 150.0,
+        "evidence": "Tax (10% GST):              $150.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "total",
+        "value": "$1,650.00",
+        "normalized_value": 1650.0,
+        "evidence": "Total Amount:               $1,650.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "amount_paid",
+        "value": "$1,650.00",
+        "normalized_value": 1650.0,
+        "evidence": "Amount Paid:                $1,650.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "amount_due",
+        "value": "$0.00",
+        "normalized_value": 0.0,
+        "evidence": "Amount Due:                 $0.00",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      }
+    ],
+    "line_items": [
+      {
+        "description": "Cloud Server Infrastructure",
+        "quantity": 5.0,
+        "unit_price": 100.0,
+        "discount": null,
+        "tax": null,
+        "taxable_amount": null,
+        "amount": 500.0,
+        "total": 500.0,
+        "raw_data": null,
+        "evidence": "1. Cloud Server Infrastructure  5.0    $100.00       $500.00",
+        "page_number": 1
+      },
+      {
+        "description": "API Gateway Services",
+        "quantity": 10.0,
+        "unit_price": 50.0,
+        "discount": null,
+        "tax": null,
+        "taxable_amount": null,
+        "amount": 500.0,
+        "total": 500.0,
+        "raw_data": null,
+        "evidence": "2. API Gateway Services        10.0    $50.00        $500.00",
+        "page_number": 1
+      },
+      {
+        "description": "Enterprise Support Package",
+        "quantity": 1.0,
+        "unit_price": 500.0,
+        "discount": null,
+        "tax": null,
+        "taxable_amount": null,
+        "amount": 500.0,
+        "total": 500.0,
+        "raw_data": null,
+        "evidence": "3. Enterprise Support Package   1.0    $500.00       $500.00",
+        "page_number": 1
+      }
+    ],
+    "tables": [],
+    "periods": [],
+    "notes": [],
+    "raw_text_by_page": [
+      {
+        "page_number": 1,
+        "text": "ACME CORPORATION - INVOICE\n    Invoice Number: INV-2025-8899\n    Date: 2025-01-15\n    Due Date: 2025-02-15\n    Seller: Acme Corp, 100 Innovation Way, Tech City\n    Buyer: Global Logistics Inc, 500 Freight Road\n    Currency: USD\n\n    LINE ITEMS:\n    ---------------------------------------------------------\n    Description                  Qty    Unit Price    Total\n    1. Cloud Server Infrastructure  5.0    $100.00       $500.00\n    2. API Gateway Services        10.0    $50.00        $500.00\n    3. Enterprise Support Package   1.0    $500.00       $500.00\n\n    ---------------------------------------------------------\n    Subtotal:                   $1,500.00\n    Tax (10% GST):              $150.00\n    Total Amount:               $1,650.00\n    Amount Paid:                $1,650.00\n    Amount Due:                 $0.00"
+      }
+    ],
+    "metadata": {
+      "normalized": true
+    }
+  },
+  "validation": {
+    "overall_status": "PASS",
+    "passed_count": 6,
+    "failed_count": 0,
+    "not_applicable_count": 0,
+    "checks": [
+      {
+        "check_name": "Line Item 1: Quantity \u00d7 Unit Price \u2248 Line Total",
+        "formula": "quantity * unit_price \u2248 line_total",
+        "operands": {
+          "quantity": 5.0,
+          "unit_price": 100.0,
+          "line_total": 500.0
+        },
+        "calculated_value": 500.0,
+        "reported_value": 500.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Line Item 2: Quantity \u00d7 Unit Price \u2248 Line Total",
+        "formula": "quantity * unit_price \u2248 line_total",
+        "operands": {
+          "quantity": 10.0,
+          "unit_price": 50.0,
+          "line_total": 500.0
+        },
+        "calculated_value": 500.0,
+        "reported_value": 500.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Line Item 3: Quantity \u00d7 Unit Price \u2248 Line Total",
+        "formula": "quantity * unit_price \u2248 line_total",
+        "operands": {
+          "quantity": 1.0,
+          "unit_price": 500.0,
+          "line_total": 500.0
+        },
+        "calculated_value": 500.0,
+        "reported_value": 500.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Sum of Line Items \u2248 Subtotal",
+        "formula": "sum(line_totals) \u2248 subtotal",
+        "operands": {
+          "sum_line_items": 1500.0,
+          "subtotal": 1500.0
+        },
+        "calculated_value": 1500.0,
+        "reported_value": 1500.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Subtotal + Tax \u2248 Total",
+        "formula": "subtotal + tax \u2248 total",
+        "operands": {
+          "subtotal": 1500.0,
+          "tax": 150.0,
+          "total": 1650.0
+        },
+        "calculated_value": 1650.0,
+        "reported_value": 1650.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      },
+      {
+        "check_name": "Total - Amount Paid \u2248 Amount Due",
+        "formula": "total - amount_paid \u2248 amount_due",
+        "operands": {
+          "total": 1650.0,
+          "amount_paid": 1650.0,
+          "amount_due": 0.0
+        },
+        "calculated_value": 0.0,
+        "reported_value": 0.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": null
+      }
+    ]
+  },
+  "processing_metadata": {
+    "processing_time_seconds": 1.85,
+    "timestamp": "2025-01-15T12:00:02Z",
+    "extractor_used": "qwen/qwen3.8-27b",
+    "pages_processed": 1,
+    "environment": "production"
+  },
+  "error_message": null
+}

@@ -1,0 +1,275 @@
+{
+  "id": "f3c4d5e6-a7b8-4c6d-0e1f-2a3b4c5d6e7f",
+  "document_name": "sample_profit_loss_20240331_120000_c3d4e5f6",
+  "document_type": "profit_loss",
+  "original_filename": "sample_profit_loss.pdf",
+  "file_type": "application/pdf",
+  "page_count": 1,
+  "processing_status": "PASS",
+  "uploaded_at": "2025-01-15T12:02:00",
+  "processed_at": "2025-01-15T12:02:03",
+  "file_validation": {
+    "is_valid": true,
+    "file_exists": true,
+    "is_not_empty": true,
+    "supported_extension": true,
+    "signature_valid": true,
+    "page_count": 1,
+    "page_count_valid": true,
+    "decodable": true,
+    "readable": true,
+    "file_size_bytes": 1166,
+    "detected_mime": "application/pdf",
+    "errors": []
+  },
+  "extracted_data": {
+    "document_type": "profit_loss",
+    "fields": [
+      {
+        "name": "revenue",
+        "value": "$100,000",
+        "normalized_value": 100000.0,
+        "evidence": "Revenue / Sales:              $100,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "other_income",
+        "value": "$20,000",
+        "normalized_value": 20000.0,
+        "evidence": "Other Income:                 $20,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "total_income",
+        "value": "$120,000",
+        "normalized_value": 120000.0,
+        "evidence": "Total Income:                 $120,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "operating_expenses",
+        "value": "$70,000",
+        "normalized_value": 70000.0,
+        "evidence": "Operating Expenses:           $70,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "provisions",
+        "value": "$10,000",
+        "normalized_value": 10000.0,
+        "evidence": "Provisions & Contingencies:   $10,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "total_expenditure",
+        "value": "$80,000",
+        "normalized_value": 80000.0,
+        "evidence": "Total Expenditure:            $80,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "profit_before_tax",
+        "value": "$40,000",
+        "normalized_value": 40000.0,
+        "evidence": "Profit Before Tax:            $40,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "tax",
+        "value": "$10,000",
+        "normalized_value": 10000.0,
+        "evidence": "Tax Expense:                  $10,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      },
+      {
+        "name": "net_profit",
+        "value": "$30,000",
+        "normalized_value": 30000.0,
+        "evidence": "Net Profit After Tax:         $30,000",
+        "page_number": 1,
+        "confidence": 1.0,
+        "status": "EXTRACTED"
+      }
+    ],
+    "line_items": [],
+    "tables": [],
+    "periods": [
+      {
+        "label": "2024",
+        "fields": [
+          {
+            "name": "revenue",
+            "value": "$100,000",
+            "normalized_value": 100000.0,
+            "evidence": "Revenue / Sales:              $100,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "other_income",
+            "value": "$20,000",
+            "normalized_value": 20000.0,
+            "evidence": "Other Income:                 $20,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "total_income",
+            "value": "$120,000",
+            "normalized_value": 120000.0,
+            "evidence": "Total Income:                 $120,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "operating_expenses",
+            "value": "$70,000",
+            "normalized_value": 70000.0,
+            "evidence": "Operating Expenses:           $70,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "provisions",
+            "value": "$10,000",
+            "normalized_value": 10000.0,
+            "evidence": "Provisions & Contingencies:   $10,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "total_expenditure",
+            "value": "$80,000",
+            "normalized_value": 80000.0,
+            "evidence": "Total Expenditure:            $80,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "profit_before_tax",
+            "value": "$40,000",
+            "normalized_value": 40000.0,
+            "evidence": "Profit Before Tax:            $40,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "tax",
+            "value": "$10,000",
+            "normalized_value": 10000.0,
+            "evidence": "Tax Expense:                  $10,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          },
+          {
+            "name": "net_profit",
+            "value": "$30,000",
+            "normalized_value": 30000.0,
+            "evidence": "Net Profit After Tax:         $30,000",
+            "page_number": 1,
+            "confidence": 1.0,
+            "status": "EXTRACTED"
+          }
+        ]
+      }
+    ],
+    "notes": [],
+    "raw_text_by_page": [
+      {
+        "page_number": 1,
+        "text": "DELTA GLOBAL LTD - PROFIT & LOSS STATEMENT\n    For the Financial Year Ended March 31, 2024\n\n    PERIOD: 2024\n\n    INCOME:\n    Revenue / Sales:              $100,000\n    Other Income:                 $20,000\n    ----------------------------------------\n    Total Income:                 $120,000\n\n    EXPENDITURE:\n    Operating Expenses:           $70,000\n    Provisions & Contingencies:   $10,000\n    ----------------------------------------\n    Total Expenditure:            $80,000\n\n    NET PROFIT:\n    Profit Before Tax:            $40,000\n    Tax Expense:                  $10,000\n    Net Profit After Tax:         $30,000"
+      }
+    ],
+    "metadata": {
+      "normalized": true
+    }
+  },
+  "validation": {
+    "overall_status": "PASS",
+    "passed_count": 3,
+    "failed_count": 0,
+    "not_applicable_count": 0,
+    "checks": [
+      {
+        "check_name": "[2024] Primary Income + Other Income \u2248 Total Income",
+        "formula": "primary_income + other_income \u2248 total_income",
+        "operands": {
+          "primary_income": 100000.0,
+          "other_income": 20000.0,
+          "total_income": 120000.0
+        },
+        "calculated_value": 120000.0,
+        "reported_value": 120000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      },
+      {
+        "check_name": "[2024] Operating Expenses + Provisions/Interest \u2248 Total Expenditure",
+        "formula": "operating_expenses + provisions_or_interest \u2248 total_expenditure",
+        "operands": {
+          "operating_expenses": 70000.0,
+          "provisions": 10000.0,
+          "total_expenditure": 80000.0
+        },
+        "calculated_value": 80000.0,
+        "reported_value": 80000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      },
+      {
+        "check_name": "[2024] Total Income - Total Expenditure \u2248 Profit Before Tax",
+        "formula": "total_income - total_expenditure \u2248 profit_before_tax",
+        "operands": {
+          "total_income": 120000.0,
+          "total_expenditure": 80000.0,
+          "profit_before_tax": 40000.0
+        },
+        "calculated_value": 40000.0,
+        "reported_value": 40000.0,
+        "variance": 0.0,
+        "tolerance": 1.0,
+        "status": "PASS",
+        "details": null,
+        "period": "2024"
+      }
+    ]
+  },
+  "processing_metadata": {
+    "processing_time_seconds": 2.2,
+    "timestamp": "2025-01-15T12:02:03Z",
+    "extractor_used": "qwen/qwen3.8-27b",
+    "pages_processed": 1,
+    "environment": "production"
+  },
+  "error_message": null
+}
