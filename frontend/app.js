@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let statusBadgeClass = 'badge-pass';
                 if (doc.processing_status === 'FAILED') statusBadgeClass = 'badge-fail';
                 if (doc.processing_status === 'INCOMPLETE') statusBadgeClass = 'badge-na';
-                const dateStr = new Date(doc.uploaded_at).toLocaleString();
+                const dateStr = formatLocalDateTime(doc.processed_at || doc.uploaded_at);
 
                 return `
                     <tr>
@@ -399,6 +399,30 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(() => alert('API Response JSON copied to clipboard!'))
             .catch(err => alert('Failed to copy: ' + err));
     });
+
+    // Format UTC timestamp into user's local timezone using Intl.DateTimeFormat
+    function formatLocalDateTime(dateInput) {
+        if (!dateInput) return '-';
+        let str = String(dateInput).trim();
+        // Server timestamps are stored in UTC without a 'Z' indicator (naive datetime.utcnow()).
+        // Append 'Z' if no timezone offset or 'Z' is present so JavaScript parses it as UTC.
+        if (!str.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(str)) {
+            str += 'Z';
+        }
+        const date = new Date(str);
+        if (isNaN(date.getTime())) {
+            return String(dateInput);
+        }
+        return new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        }).format(date);
+    }
 
     function escapeHtml(str) {
         if (!str) return '';

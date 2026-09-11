@@ -124,3 +124,15 @@ def test_live_pipeline_non_monetary_normalization_and_incomplete_status(mock_ext
     assert get_data["processing_status"] == "INCOMPLETE"
     assert get_data["validation"]["overall_status"] == "INCOMPLETE"
 
+
+def test_static_frontend_and_app_js_served():
+    """Verify index.html and static app.js are served properly and contain formatLocalDateTime."""
+    res_index = client.get("/")
+    assert res_index.status_code == 200
+    assert "FinIntel Platform" in res_index.text
+
+    res_js = client.get("/static/app.js")
+    assert res_js.status_code == 200
+    assert "formatLocalDateTime" in res_js.text
+    assert "Intl.DateTimeFormat" in res_js.text
+
