@@ -96,3 +96,61 @@ def test_profit_loss_missing_operands_remain_not_applicable():
     assert "Missing income components" in income_check.details
 
 
+def test_profit_loss_minority_interest_no_tax_pass():
+    """total_income - total_expenditure - minority_interest ≈ net_profit → PASS
+    Mirrors the Consolidated P&L 2026 scenario: no tax field present."""
+    doc = DocumentExtraction(
+        document_type="profit_loss",
+        fields=[
+            ExtractedField(name="primary_income", value="348615.15", normalized_value=348615.15),
+            ExtractedField(name="other_income", value="146847.66", normalized_value=146847.66),
+            ExtractedField(name="total_income", value="495462.81", normalized_value=495462.81),
+            ExtractedField(name="total_expenditure", value="416243.35", normalized_value=416243.35),
+            ExtractedField(name="minority_interest", value="3193.49", normalized_value=3193.49),
+            ExtractedField(name="net_profit", value="76025.97", normalized_value=76025.97),
+        ]
+    )
+    checks = validate_profit_loss(doc)
+    profit_check = next(c for c in checks if "Total Income - Total Expenditure" in c.check_name)
+    assert profit_check.status == "PASS", f"Expected PASS, got {profit_check.status} (calc={profit_check.calculated_value}, reported={profit_check.reported_value}, var={profit_check.variance})"
+    # 495462.81 - 416243.35 - 3193.49 = 76025.97
+    assert abs(profit_check.calculated_value - 76025.97) < 0.01
+
+
+def test_profit_loss_minority_interest_with_tax_pass():
+    """total_income - total_expenditure - tax - minority_interest ≈ net_profit → PASS"""
+    doc = DocumentExtraction(
+        document_type="profit_loss",
+        fields=[
+            ExtractedField(name="revenue", value="500000", normalized_value=500000.0),
+            ExtractedField(name="other_income", value="50000", normalized_value=50000.0),
+            ExtractedField(name="total_income", value="550000", normalized_value=550000.0),
+            ExtractedField(name="total_expenditure", value="200000", normalized_value=200000.0),
+            ExtractedField(name="tax", value="100000", normalized_value=100000.0),
+            ExtractedField(name="minority_interest", value="10000", normalized_value=10000.0),
+            ExtractedField(name="net_profit", value="240000", normalized_value=240000.0),
+        ]
+    )
+    checks = validate_profit_loss(doc)
+    profit_check = next(c for c in checks if "Total Income - Total Expenditure" in c.check_name)
+    assert profit_check.status == "PASS"
+    # 550000 - 200000 - 100000 - 10000 = 240000
+    assert abs(profit_check.calculated_value - 240000.0) < 0.01
+
+
+def test_profit_loss_minority_interest_genuine_mismatch_fail():
+    """total_income - total_expenditure - minority_interest != net_profit → FAIL"""
+    doc = DocumentExtraction(
+        document_type="profit_loss",
+        fields=[
+            ExtractedField(name="total_income", value="500000", normalized_value=500000.0),
+            ExtractedField(name="total_expenditure", value="200000", normalized_value=200000.0),
+            ExtractedField(name="minority_interest", value="10000", normalized_value=10000.0),
+            ExtractedField(name="net_profit", value="100000", normalized_value=100000.0),  # should be 290000
+        ]
+    )
+    checks = validate_profit_loss(doc)
+    profit_check = next(c for c in checks if "Total Income - Total Expenditure" in c.check_name)
+    assert profit_check.status == "FAIL"
+    # 500000 - 200000 - 10000 = 290000, but reported 100000 → FAIL
+    assert profit_check.variance > 100000

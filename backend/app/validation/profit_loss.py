@@ -40,7 +40,6 @@ def validate_profit_loss(extraction: DocumentExtraction) -> List[ValidationCheck
         # Profit components
         profit_before_tax = field_map.get("profit_before_tax") or field_map.get("pbt")
         tax = field_map.get("tax") or field_map.get("tax_expense") or field_map.get("provision_for_tax")
-        minority_interest = field_map.get("minority_interest") or 0.0
         net_profit = field_map.get("net_profit") or field_map.get("profit_after_tax") or field_map.get("pat") or field_map.get("consolidated_net_profit_before_minority_interest")
 
         # Check 1: Revenue/Interest Earned + Other Income ≈ Total Income
@@ -122,8 +121,12 @@ def validate_profit_loss(extraction: DocumentExtraction) -> List[ValidationCheck
 
         if total_income is not None and total_expenditure is not None and target_profit is not None:
             calc_profit = float(Decimal(str(total_income)) - Decimal(str(total_expenditure)))
-            if tax is not None and target_name == "net_profit":
-                calc_profit = float(Decimal(str(calc_profit)) - Decimal(str(tax)) - Decimal(str(minority_interest)))
+            if target_name == "net_profit":
+                if tax is not None:
+                    calc_profit = float(Decimal(str(calc_profit)) - Decimal(str(tax)))
+                mi = field_map.get("minority_interest")
+                if mi is not None:
+                    calc_profit = float(Decimal(str(calc_profit)) - Decimal(str(mi)))
                 
             variance_3 = abs(calc_profit - target_profit)
             status_3 = "PASS" if variance_3 <= abs_tol else "FAIL"
