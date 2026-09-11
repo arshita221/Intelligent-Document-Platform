@@ -47,7 +47,7 @@ flowchart TD
     AI[Groq API qwen/qwen3.8-27b]
     X[Structured JSON Normalizer]
     VE[Deterministic Financial Validation Engine]
-    DB[(SQLite / Supabase PostgreSQL)]
+    DB[(SQLite / Render PostgreSQL)]
 
     U -->|Upload Document| API
     API --> V
@@ -71,7 +71,7 @@ flowchart TD
 | **Backend Framework** | FastAPI (Python 3.10+) | Asynchronous, automatic OpenAPI/Swagger documentation generation, strict data validation with Pydantic v2. |
 | **Document Engine** | PyMuPDF (`fitz`) & Pillow | High-performance C-backed PDF text parsing, page rendering (200 DPI PNGs for scanned OCR), and image verification. |
 | **Financial Validation** | Python `Decimal` Engine | Absolute mathematical precision for currency arithmetic, configurable tolerance, and multi-period period isolation. |
-| **Database** | SQLAlchemy + SQLite / PostgreSQL | Zero-dependency SQLite for local dev, seamless production migration to Supabase PostgreSQL via single `DATABASE_URL`. |
+| **Database** | SQLAlchemy + SQLite / PostgreSQL | SQLite for local development and PostgreSQL for persistent production deployment via DATABASE_URL. |
 | **Frontend** | HTML5, CSS3, Vanilla JS | Zero build step complexity, fast performance, served directly from FastAPI single web service. |
 | **Deployment** | Render Web Service | Free HTTPS hosting binding to `0.0.0.0:$PORT` for single-service API + Frontend deployment. |
 
@@ -117,7 +117,7 @@ The platform runs document-specific deterministic checks in Python:
 ### C. Profit & Loss Validation (Evaluated per period)
 - **Total Income**: `Primary Income + Other Income ≈ Total Income`.
 - **Total Expenditure**: `Operating Expenses + Provisions & Interest ≈ Total Expenditure`.
-- **Net Profit**: `Total Income - Total Expenditure ≈ Profit Before Tax / Net Profit`.
+-  Net Profit: Total Income − Total Expenditure is reconciled against the reported profit figure, with tax/minority-interest adjustments handled when those values are explicitly reported.
 
 ### D. Cash Flow Validation (Evaluated per period)
 - **Net Increase**: `Operating + Investing + Financing Cash Flows + FX Effect ≈ Net Increase`.
@@ -136,8 +136,8 @@ The platform runs document-specific deterministic checks in Python:
 
 1. **Clone Repository**:
    ```bash
-   git clone https://github.com/your-username/financial-document-intelligence.git
-   cd financial-document-intelligence
+git clone https://github.com/arshita221/Intelligent-Document-Platform.git
+cd Intelligent-Document-Platform
    ```
 
 2. **Create & Activate Virtual Environment**:
@@ -198,6 +198,9 @@ Execute tests from the project root:
 ```bash
 PYTHONPATH=backend pytest backend/tests/ -v
 ```
+**Latest verification result: 75 tests passed.**
+
+The suite covers file validation, financial validation, API integration, persistence behavior, and failure-handling paths.
 
 ### Verified Test Coverage:
 - File validation (valid PDFs, PNGs, JPGs, corrupt PDFs, empty files, unsupported extensions, PDFs > 3 pages).
@@ -226,32 +229,46 @@ PYTHONPATH=backend pytest backend/tests/ -v
 
 ## 10. Deployment Guide
 
-### Deploying to Render & Supabase PostgreSQL
+### Deploying to Render PostgreSQL
 
-1. **Database Setup (Supabase)**:
-   - Create a free PostgreSQL project on Supabase.
-   - Copy the database connection string (`postgresql://postgres:[password]@db.[project-id].supabase.co:5432/postgres`).
+1. Database Setup (Render PostgreSQL):
+   - Create a PostgreSQL database on Render.
+   - Copy the database connection URL.
+   - Set DATABASE_URL in the Render Web Service environment variables.
 
-2. **Render Web Service Deployment**:
-   - Connect your GitHub repository to Render.
-   - Create a new **Web Service**.
-   - Build Command: `pip install -r backend/requirements.txt`
-   - Start Command: `PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - Add Environment Variables in Render Dashboard:
-     - `GROQ_API_KEY`: Your key
-     - `GROQ_MODEL`: `qwen/qwen3.8-27b`
-     - `DATABASE_URL`: Your Supabase connection string
-     - `ENVIRONMENT`: `production`
+2. Render Web Service Deployment:
+   - Connect the GitHub repository to Render.
+   - Build Command:
+     pip install -r backend/requirements.txt
 
+   - Start Command:
+     PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+   - Configure:
+     GROQ_API_KEY
+     GROQ_MODEL=qwen/qwen3.8-27b
+     DATABASE_URL=<Render PostgreSQL connection URL>
+     ENVIRONMENT=production
+     
 ---
 
 ## 11. Known Limitations & Future Improvements
 
 - **Maximum PDF Length**: Limited to 3 pages per specification. Can be extended with asynchronous background task queues (Celery/Redis) for 100+ page documents.
 - **Complex Table Structure Alignment**: Extremely dense multi-nested financial tables benefit from specialized fine-tuned OCR layout models.
+- **AI API Rate Limits**: Groq free-tier limits can restrict high-volume document processing.
+- **Processing Mode**: Document processing is currently synchronous; a production version could use asynchronous job queues and workers.
 
 ---
 
 ## 12. AI & Tool Usage Declaration
 
-This project was built, tested, and verified using Google Gemini AI agentic tools for internship technical case study demonstration purposes.
+### Application AI
+
+The application uses the Groq API with the Qwen 3.8 27B multimodal model for financial-document understanding and structured extraction.
+
+### Development AI Assistance
+
+AI coding/development assistance was used during implementation for code generation support, debugging, test design, documentation, and development workflow assistance.
+
+The final application was tested locally and verified on the deployed environment.
