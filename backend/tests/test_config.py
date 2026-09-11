@@ -33,7 +33,7 @@ def test_groq_429_token_limit_and_single_retry(monkeypatch):
             calls.append(kwargs)
             if len(calls) == 1:
                 # Simulate 429 output token limit error on 1st attempt
-                raise Exception("Request too large for model qwen/qwen3.8-27b: Limit 1000, Requested 950. Please reduce max_tokens.")
+                raise Exception("Request too large for model qwen/qwen3.8-27b: Limit 1000, Requested 900. Please reduce max_tokens.")
             else:
                 # Success on 2nd attempt
                 class Choice:
@@ -50,7 +50,39 @@ def test_groq_429_token_limit_and_single_retry(monkeypatch):
     ext = extract_with_groq("invoice", [RawTextPage(page_number=1, text="Invoice #123")], [])
 
     assert len(calls) == 2
-    assert calls[0]["max_tokens"] == 950
+    assert calls[0]["max_tokens"] == 900
+    assert calls[0].get("reasoning_effort") == "none"
     assert calls[1]["max_tokens"] == 700
+    assert calls[1].get("reasoning_effort") == "none"
     assert ext.document_type == "invoice"
+
+
+def test_fallback_extraction_tokens_and_reasoning_effort(monkeypatch):
+    """Verifies that perform_fallback_extraction enforces max_tokens <= 800 and reasoning_effort='none'."""
+    from app.services.groq_service import perform_fallback_extraction
+    from app.schemas.extraction import RawTextPage
+
+    calls = []
+
+    class MockCompletions:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            class Choice:
+                message = type("Message", (), {"content": '{"fields": [], "line_items": []}'})
+            return type("Response", (), {"choices": [Choice()]})
+
+    class MockGroqClient:
+        def __init__(self, api_key):
+            self.chat = type("Chat", (), {"completions": MockCompletions()})
+
+    monkeypatch.setattr("groq.Groq", MockGroqClient)
+    monkeypatch.setattr("app.core.config.settings.GROQ_API_KEY", "gsk_TestKeyForUnitTestingOnly12345")
+
+    ext = perform_fallback_extraction("invoice", [RawTextPage(page_number=1, text="Table")], [])
+
+    assert len(calls) == 1
+    assert calls[0]["max_tokens"] <= 800
+    assert calls[0]["max_tokens"] == 800
+    assert calls[0].get("reasoning_effort") == "none"
+
 

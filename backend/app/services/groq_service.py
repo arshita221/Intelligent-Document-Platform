@@ -216,16 +216,29 @@ def extract_with_groq(
         }
     ]
 
-    # Execute single Groq extraction request with safe token budget (<= 1000)
+    # Execute single Groq extraction request with safe token budget (<= 900)
+    create_kwargs = {
+        "model": model_name,
+        "messages": messages,
+        "response_format": {"type": "json_object"},
+        "temperature": 0.1,
+        "max_tokens": 900
+    }
+    if "qwen" in model_name.lower():
+        create_kwargs["reasoning_effort"] = "none"
+
     try:
-        logger.info(f"Sending extraction request to Groq '{model_name}' for {document_type} (max_tokens=950)...")
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=messages,
-            response_format={"type": "json_object"},
-            temperature=0.1,
-            max_tokens=950
-        )
+        logger.info(f"Sending extraction request to Groq '{model_name}' for {document_type} (max_tokens=900)...")
+        try:
+            response = client.chat.completions.create(**create_kwargs)
+        except Exception as param_err:
+            if "reasoning_effort" in str(param_err).lower() and "reasoning_effort" in create_kwargs:
+                logger.warning(f"reasoning_effort not supported for {model_name}, retrying without it: {param_err}")
+                create_kwargs.pop("reasoning_effort", None)
+                response = client.chat.completions.create(**create_kwargs)
+            else:
+                raise param_err
+
         raw_response_text = response.choices[0].message.content
         logger.info(f"Received successful response from Groq ({model_name}).")
         parsed_json = json.loads(raw_response_text)
@@ -263,14 +276,26 @@ def extract_with_groq(
                     pass
 
             # Perform single retry with max_tokens=700
+            retry_kwargs = {
+                "model": model_name,
+                "messages": messages,
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1,
+                "max_tokens": 700
+            }
+            if "qwen" in model_name.lower() and "reasoning_effort" in create_kwargs:
+                retry_kwargs["reasoning_effort"] = "none"
+
             try:
-                retry_resp = client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    response_format={"type": "json_object"},
-                    temperature=0.1,
-                    max_tokens=700
-                )
+                try:
+                    retry_resp = client.chat.completions.create(**retry_kwargs)
+                except Exception as param_err:
+                    if "reasoning_effort" in str(param_err).lower() and "reasoning_effort" in retry_kwargs:
+                        retry_kwargs.pop("reasoning_effort", None)
+                        retry_resp = client.chat.completions.create(**retry_kwargs)
+                    else:
+                        raise param_err
+
                 raw_response_text = retry_resp.choices[0].message.content
                 logger.info(f"Received successful response from Groq on 429 retry ({model_name}).")
                 parsed_json = json.loads(raw_response_text)
@@ -363,9 +388,14 @@ def should_trigger_fallback(extraction: DocumentExtraction, doc_type: str) -> bo
         # Fallback if no line items were extracted
         return len(extraction.line_items) == 0
 
-    # For statement types, count how many fields have a non-null normalized_value
+    # For statement types, count how many fields have a non-null normalized_value across fields and periods
     numeric_fields = [f for f in extraction.fields if f.normalized_value is not None]
     field_names = {f.name for f in extraction.fields if f.normalized_value is not None}
+    for p in extraction.periods:
+        for pf in p.fields:
+            if pf.normalized_value is not None:
+                numeric_fields.append(pf)
+                field_names.add(pf.name)
 
     if doc_type_clean in ("balance_sheet", "balancesheet"):
         has_canonical = bool(field_names & _BS_CANONICAL_FIELDS)
@@ -390,7 +420,7 @@ def perform_fallback_extraction(
 ) -> DocumentExtraction:
     """
     Performs ONE targeted Groq Vision extraction focused exclusively on financial
-    rows/line items. Uses max_tokens=900 and a document-type-specific prompt
+    rows/line items. Uses max_tokens=800 and a document-type-specific prompt
     that omits metadata to maximise financial content in the output budget.
     """
     model_name = settings.GROQ_MODEL or "qwen/qwen3.8-27b"
@@ -437,15 +467,28 @@ def perform_fallback_extraction(
 
     messages = [{"role": "user", "content": content_parts}]
 
+    fallback_kwargs = {
+        "model": model_name,
+        "messages": messages,
+        "response_format": {"type": "json_object"},
+        "temperature": 0.1,
+        "max_tokens": 800
+    }
+    if "qwen" in model_name.lower():
+        fallback_kwargs["reasoning_effort"] = "none"
+
     try:
-        logger.info(f"Sending FALLBACK extraction request to Groq '{model_name}' for {document_type} (max_tokens=900)...")
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=messages,
-            response_format={"type": "json_object"},
-            temperature=0.1,
-            max_tokens=900
-        )
+        logger.info(f"Sending FALLBACK extraction request to Groq '{model_name}' for {document_type} (max_tokens=800)...")
+        try:
+            response = client.chat.completions.create(**fallback_kwargs)
+        except Exception as param_err:
+            if "reasoning_effort" in str(param_err).lower() and "reasoning_effort" in fallback_kwargs:
+                logger.warning(f"reasoning_effort not supported for fallback {model_name}, retrying without it: {param_err}")
+                fallback_kwargs.pop("reasoning_effort", None)
+                response = client.chat.completions.create(**fallback_kwargs)
+            else:
+                raise param_err
+
         raw_text = response.choices[0].message.content
         logger.info(f"Received successful FALLBACK response from Groq ({model_name}).")
         parsed_json = json.loads(raw_text)
@@ -466,14 +509,27 @@ def perform_fallback_extraction(
                         time.sleep(wait_sec)
                 except Exception:
                     pass
+
+            fb_retry_kwargs = {
+                "model": model_name,
+                "messages": messages,
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1,
+                "max_tokens": 700
+            }
+            if "qwen" in model_name.lower() and "reasoning_effort" in fallback_kwargs:
+                fb_retry_kwargs["reasoning_effort"] = "none"
+
             try:
-                retry_resp = client.chat.completions.create(
-                    model=model_name,
-                    messages=messages,
-                    response_format={"type": "json_object"},
-                    temperature=0.1,
-                    max_tokens=700
-                )
+                try:
+                    retry_resp = client.chat.completions.create(**fb_retry_kwargs)
+                except Exception as param_err:
+                    if "reasoning_effort" in str(param_err).lower() and "reasoning_effort" in fb_retry_kwargs:
+                        fb_retry_kwargs.pop("reasoning_effort", None)
+                        retry_resp = client.chat.completions.create(**fb_retry_kwargs)
+                    else:
+                        raise param_err
+
                 raw_text = retry_resp.choices[0].message.content
                 logger.info(f"Received successful FALLBACK response on retry ({model_name}).")
                 parsed_json = json.loads(raw_text)
